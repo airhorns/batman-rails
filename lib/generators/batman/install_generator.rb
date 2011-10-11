@@ -25,9 +25,12 @@ module Batman
 
       def inject_batman
         with_app_name do
-          inject_into_file "#{js_path}/application.js", :after=>/\/\/=(?!.*\/\/=).*?$/m do
+          require_tree_pattern = /\/\/=(?!.*\/\/=).*?$/m
+
+          inject_into_file "#{js_path}/application.js", :before=>require_tree_pattern do
 <<-CODE
-\n\n//= require batman/batman
+\n// Batman.js and its adapters
+//= require batman/batman
 //= require batman/batman.jquery
 //= require batman/batman.rails
 
@@ -36,7 +39,13 @@ module Batman
 //= require_tree ./models
 //= require_tree ./controllers
 //= require_tree ./helpers
+\n
+CODE
+          end
 
+          inject_into_file "#{js_path}/application.js", :after=>require_tree_pattern do
+<<-CODE
+\n// Run the Batman app
 $(document).ready(function(){
   #{js_app_name}.run();
 });
