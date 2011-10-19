@@ -1,4 +1,5 @@
 require 'generators/batman/common'
+
 module Batman
   module Generators
     class InstallGenerator < ::Rails::Generators::Base
@@ -25,10 +26,22 @@ module Batman
 
       def inject_batman
         with_app_name do
-          require_tree_pattern = /\/\/=(?!.*\/\/=).*?$/m
+          application_file = File.join(js_path, "application.js")
 
-          inject_into_file "#{js_path}/application.js", :before=>require_tree_pattern do
-<<-CODE
+          if File.exist?(File.join(destination_root, application_file))
+            file_type = :javascript
+            require_tree_pattern = /\/\/=(?!.*\/\/=).*?$/m
+          else
+            file_type = :coffeescript
+            require_tree_pattern = /#=(?!.*\/\/=).*?$/m
+            application_file = "#{application_file}.coffee"
+            unless File.exist?(File.join(destination_root, application_file))
+              raise Thor::Error, "Couldn't find either application.js or application.js.coffee files for use with batman!"
+            end
+          end
+
+          inject_into_file application_file, :before=>require_tree_pattern do
+code = <<-CODE
 \n// Batman.js and its adapters
 //= require batman/batman
 //= require batman/batman.jquery
@@ -41,15 +54,27 @@ module Batman
 //= require_tree ./helpers
 \n
 CODE
+            if file_type == :coffeescript
+              code.gsub!('//', '#')
+            end
+            code
           end
 
-          inject_into_file "#{js_path}/application.js", :after=>require_tree_pattern do
+          inject_into_file application_file, :after=>require_tree_pattern do
+            if file_type == :coffeescript
+<<-CODE
+\n# Run the Batman app
+$(document).ready ->
+  #{js_app_name}.run()
+CODE
+            else
 <<-CODE
 \n// Run the Batman app
 $(document).ready(function(){
   #{js_app_name}.run();
 });
 CODE
+            end
           end
         end
       end
