@@ -3,11 +3,11 @@ window.<%= js_app_name %> = class <%= js_app_name %> extends Batman.App
   # @root 'controller#all'
   # @route '/controller/:id', 'controller#show', resource: 'model', action: 'show'
 
-  @run ->
+  @run: ->
     console.log "Running..."
     true
 
-  @ready ->
+  @ready: ->
     console.log "<%= js_app_name %> ready for use."
 
   @flash: Batman()
