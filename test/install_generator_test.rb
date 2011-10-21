@@ -16,7 +16,7 @@ module InstallGeneratorTests
 
     assert_file "#{javascripts_path}/dummy.js.coffee" do |app|
       assert_match /window\.Dummy = class Dummy extends Batman\.App/, app
-      assert_match /@run: ->/, app
+      assert_match /@run ->/, app
     end
   end
 
