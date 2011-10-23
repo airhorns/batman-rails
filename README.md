@@ -70,4 +70,3 @@ Install the gem and generate scaffolding.
     
 You now have installed the batman-rails gem, setup a default directory structure for your frontend batman code. 
 Then you generated the usual rails server side crud scaffolding and finally generated batman.js code to provide a simple single page crud app.
-You have one last step:
