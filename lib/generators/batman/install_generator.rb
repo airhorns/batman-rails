@@ -27,20 +27,47 @@ module Batman
       def inject_batman
         with_app_name do
           application_file = File.join(js_path, "application.js")
+          file_type        = :javascript
+          pattern          = /\/\/=(?!.*\/\/=).*?$/m
 
-          if File.exist?(File.join(destination_root, application_file))
-            file_type = :javascript
-            require_tree_pattern = /\/\/=(?!.*\/\/=).*?$/m
-          else
-            file_type = :coffeescript
-            require_tree_pattern = /#=(?!.*\/\/=).*?$/m
+          unless exists?(application_file)
             application_file = "#{application_file}.coffee"
-            unless File.exist?(File.join(destination_root, application_file))
-              raise Thor::Error, "Couldn't find either application.js or application.js.coffee files for use with batman!"
-            end
+            file_type        = :coffeescript
+            pattern          = /#=(?!.*#=).*?$/m
           end
 
-          inject_into_file application_file, :before=>require_tree_pattern do
+          raise Thor::Error, "Couldn't find either application.js or application.js.coffee files for use with batman!" unless exists?(application_file)
+
+          inject_into_file application_file, :before=>pattern do
+            batman_requires(file_type)
+          end
+
+          inject_into_file application_file, :after=>pattern do
+            ready_function(file_type)
+          end
+        end
+      end
+
+      private
+
+      def ready_function(file_type=:javascript)
+        if file_type == :coffeescript
+<<-CODE
+\n# Run the Batman app
+$(document).ready ->
+  #{js_app_name}.run()
+CODE
+        else
+<<-CODE
+\n// Run the Batman app
+$(document).ready(function(){
+  #{js_app_name}.run();
+});
+CODE
+        end
+      end
+
+      def batman_requires(file_type=:javascript)
 code = <<-CODE
 \n// Batman.js and its adapters
 //= require batman/batman
@@ -54,29 +81,11 @@ code = <<-CODE
 //= require_tree ./helpers
 \n
 CODE
-            if file_type == :coffeescript
-              code.gsub!('//', '#')
-            end
-            code
-          end
+        file_type == :coffeescript ? code.gsub('//', '#') : code
+      end
 
-          inject_into_file application_file, :after=>require_tree_pattern do
-            if file_type == :coffeescript
-<<-CODE
-\n# Run the Batman app
-$(document).ready ->
-  #{js_app_name}.run()
-CODE
-            else
-<<-CODE
-\n// Run the Batman app
-$(document).ready(function(){
-  #{js_app_name}.run();
-});
-CODE
-            end
-          end
-        end
+      def exists?(file)
+        File.exist?(File.join(destination_root, file))
       end
     end
   end

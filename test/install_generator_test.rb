@@ -60,16 +60,16 @@ module InstallGeneratorTests
 
     assert_file "#{javascripts_path}/#{application_javascript_path}" do |app|
       %W{batman batman.jquery batman.rails}.each do |require|
-        assert_match /require batman\/#{require}/, app
+        assert_equal 1, app.scan(%r{require batman\/#{require}$}).length
       end
 
       assert_match /require dummy/, app
 
       %W{models controllers helpers}.each do |require|
-        assert_match /require_tree \.\/#{require}/, app
+        assert_equal 1, app.scan(/require_tree \.\/#{require}/).length
       end
 
-      assert_match /Dummy\.run\(\)/, app
+      assert_equal 1, app.scan(/Dummy\.run\(\)/).length
     end
   end
 
