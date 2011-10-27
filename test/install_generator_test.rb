@@ -10,6 +10,10 @@ module InstallGeneratorTests
     Rails.application.class.stubs(:name).returns("Dummy::Application")
     super
   end
+  
+  def teardown
+    Rails.application.class.unstub(:name)
+  end
 
   def test_batman_application_file_is_created
     run_generator
