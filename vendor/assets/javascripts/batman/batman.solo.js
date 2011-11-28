@@ -120,19 +120,19 @@ function(context, win) {
         }
 
         function setType(url) {
-            if (/\.json$/.test(url)) {
+            if (/\.json($|\?)/.test(url)) {
                 return 'json'
             }
-            if (/\.jsonp$/.test(url)) {
+            if (/\.jsonp($|\?)/.test(url)) {
                 return 'jsonp'
             }
-            if (/\.js$/.test(url)) {
+            if (/\.js($|\?)/.test(url)) {
                 return 'js'
             }
-            if (/\.html?$/.test(url)) {
+            if (/\.html?($|\?)/.test(url)) {
                 return 'html'
             }
-            if (/\.xml$/.test(url)) {
+            if (/\.xml($|\?)/.test(url)) {
                 return 'xml'
             }
             return 'js'
@@ -284,7 +284,9 @@ function(context, win) {
     var add, k, name, s, v, value;
     s = [];
     add = function(key, value) {
-      value = (Batman.typeOf(value) === 'function' ? value() : value);
+      if (typeof value === 'function') {
+        value = value();
+      }
       return s[s.length] = encodeURIComponent(key) + "=" + encodeURIComponent(value);
     };
     if (Batman.typeOf(a) === 'Array') {
@@ -320,7 +322,10 @@ function(context, win) {
     }
   };
   Batman.Request.prototype.send = function(data) {
-    var options, xhr, _ref;
+    var options, params, xhr, _ref;
+    if (data == null) {
+      data = this.get('data');
+    }
     this.fire('loading');
     options = {
       url: this.get('url'),
@@ -329,7 +334,7 @@ function(context, win) {
       headers: {},
       success: __bind(function(response) {
         this.set('response', response);
-        this.set('status', xhr.status);
+        this.set('status', (typeof xhr !== "undefined" && xhr !== null ? xhr.status : void 0) || 200);
         return this.fire('success', response);
       }, this),
       error: __bind(function(xhr) {
@@ -342,18 +347,17 @@ function(context, win) {
         return this.fire('loaded');
       }, this)
     };
+    if (!this.get('formData')) {
+      options.headers['Content-type'] = this.get('contentType');
+    }
     if ((_ref = options.method) === 'PUT' || _ref === 'POST') {
-      if (!this.get('formData')) {
-        options.headers['Content-type'] = this.get('contentType');
-        data = data || this.get('data');
-        if (options.method === 'GET') {
-          options.url += param(data);
-        } else {
-          options.data = param(data);
-        }
+      if (this.get('formData')) {
+        options.data = this.constructor.objectToFormData(data);
       } else {
-        options.data = this.constructor.objectToFormData(options.data);
+        options.data = param(data);
       }
+    } else if (options.method === 'GET' && (params = param(data))) {
+      options.url += "?" + params;
     }
     return xhr = (reqwest(options)).request;
   };
