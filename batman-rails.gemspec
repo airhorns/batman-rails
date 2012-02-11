@@ -13,10 +13,10 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "batman-rails"
 
-  s.add_dependency "railties", "~> 3.1.0"
-  s.add_dependency "thor",     "~> 0.14"
-  s.add_development_dependency "bundler", "~> 1.0.0"
-  s.add_development_dependency "rails",   "~> 3.1.0"
+  s.add_dependency "railties", ">= 3.1.0"
+  s.add_dependency "thor",     ">= 0.14"
+  s.add_development_dependency "bundler", ">= 1.0.0"
+  s.add_development_dependency "rails",   ">= 3.1.0"
   s.add_development_dependency "mocha"
   s.add_development_dependency "sqlite3"
 
