@@ -1,11 +1,5 @@
-#
-# batman.solo.coffee
-# batman.js
-#
-# Created by Nick Small
-# Copyright 2011, Shopify
-#
-`
+(function() {
+  
 /*!
   * Reqwest! A general purpose XHR connection manager
   * (c) Dustin Diaz 2011
@@ -382,115 +376,129 @@
   return reqwest
 })
 
-`
-(exports ? this).reqwest = if window? then window.reqwest else reqwest
+;
 
-# `param` and `buildParams` stolen from jQuery
-#
-# jQuery JavaScript Library v1.6.1
-# http://jquery.com/
-#
-# Copyright 2011, John Resig
-# Dual licensed under the MIT or GPL Version 2 licenses.
-# http://jquery.org/license
-rbracket = /\[\]$/
-r20 = /%20/g
-param = (a) ->
-  return a if typeof a is 'string'
-  s = []
-  add = (key, value) ->
-    value = value() if typeof value is 'function'
-    value = '' unless value?
-    s[s.length] = encodeURIComponent(key) + "=" + encodeURIComponent(value)
+  var prefixes;
 
-  if Batman.typeOf(a) is 'Array'
-    for value, name of a
-      add name, value
-  else
-    for own k, v of a
-      buildParams k, v, add
-  s.join("&").replace r20, "+"
+  (typeof exports !== "undefined" && exports !== null ? exports : this).reqwest = typeof window !== "undefined" && window !== null ? window.reqwest : reqwest;
 
-buildParams = (prefix, obj, add) ->
-  if Batman.typeOf(obj) is 'Array'
-    for v, i in obj
-      if rbracket.test(prefix)
-        add prefix, v
-      else
-        buildParams prefix + "[" + (if typeof v == "object" or Batman.typeOf(v) is 'Array' then i else "") + "]", v, add
-  else if obj? and typeof obj == "object"
-    for name of obj
-      buildParams prefix + "[" + name + "]", obj[name], add
-  else
-    add prefix, obj
+  Batman.Request.prototype._parseResponseHeaders = function(xhr) {
+    var headers;
+    return headers = xhr.getAllResponseHeaders().split('\n').reduce(function(acc, header) {
+      var key, matches, value;
+      if (matches = header.match(/([^:]*):\s*(.*)/)) {
+        key = matches[1];
+        value = matches[2];
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+  };
 
-Batman.Request::send = (data) ->
-  data ?= @get('data')
-  @fire 'loading'
+  Batman.Request.prototype.send = function(data) {
+    var options, xhr, _ref,
+      _this = this;
+    if (data == null) {
+      data = this.get('data');
+    }
+    this.fire('loading');
+    options = {
+      url: this.get('url'),
+      method: this.get('method'),
+      type: this.get('type'),
+      headers: this.get('headers'),
+      success: function(response) {
+        _this.mixin({
+          xhr: xhr,
+          response: response,
+          status: typeof xhr !== "undefined" && xhr !== null ? xhr.status : void 0,
+          responseHeaders: _this._parseResponseHeaders(xhr)
+        });
+        return _this.fire('success', response);
+      },
+      error: function(xhr) {
+        _this.mixin({
+          xhr: xhr,
+          response: xhr.responseText || xhr.content,
+          status: xhr.status,
+          responseHeaders: _this._parseResponseHeaders(xhr)
+        });
+        xhr.request = _this;
+        return _this.fire('error', xhr);
+      },
+      complete: function() {
+        return _this.fire('loaded');
+      }
+    };
+    if ((_ref = options.method) === 'PUT' || _ref === 'POST') {
+      if (this.hasFileUploads()) {
+        options.data = this.constructor.objectToFormData(data);
+      } else {
+        options.contentType = this.get('contentType');
+        options.data = Batman.URI.queryFromParams(data);
+      }
+    } else {
+      options.data = data;
+    }
+    return xhr = (reqwest(options)).request;
+  };
 
-  options =
-    url: @get 'url'
-    method: @get 'method'
-    type: @get 'type'
-    headers: @get 'headers'
+  prefixes = ['Webkit', 'Moz', 'O', 'ms', ''];
 
-    success: (response) =>
-      @set 'response', response
-      @set 'status', (xhr?.status or 200)
-      @fire 'success', response
+  Batman.mixins.animation = {
+    initialize: function() {
+      var prefix, _i, _len;
+      for (_i = 0, _len = prefixes.length; _i < _len; _i++) {
+        prefix = prefixes[_i];
+        this.style["" + prefix + "Transform"] = 'scale(0, 0)';
+        this.style.opacity = 0;
+        this.style["" + prefix + "TransitionProperty"] = "" + (prefix ? '-' + prefix.toLowerCase() + '-' : '') + "transform, opacity";
+        this.style["" + prefix + "TransitionDuration"] = "0.8s, 0.55s";
+        this.style["" + prefix + "TransformOrigin"] = "left top";
+      }
+      return this;
+    },
+    show: function(addToParent) {
+      var show, _ref, _ref1,
+        _this = this;
+      show = function() {
+        var prefix, _i, _len;
+        _this.style.opacity = 1;
+        for (_i = 0, _len = prefixes.length; _i < _len; _i++) {
+          prefix = prefixes[_i];
+          _this.style["" + prefix + "Transform"] = 'scale(1, 1)';
+        }
+        return _this;
+      };
+      if (addToParent) {
+        if ((_ref = addToParent.append) != null) {
+          _ref.appendChild(this);
+        }
+        if ((_ref1 = addToParent.before) != null) {
+          _ref1.parentNode.insertBefore(this, addToParent.before);
+        }
+        setTimeout(show, 0);
+      } else {
+        show();
+      }
+      return this;
+    },
+    hide: function(shouldRemove) {
+      var prefix, _i, _len,
+        _this = this;
+      this.style.opacity = 0;
+      for (_i = 0, _len = prefixes.length; _i < _len; _i++) {
+        prefix = prefixes[_i];
+        this.style["" + prefix + "Transform"] = 'scale(0, 0)';
+      }
+      if (shouldRemove) {
+        setTimeout((function() {
+          var _ref;
+          return (_ref = _this.parentNode) != null ? _ref.removeChild(_this) : void 0;
+        }), 600);
+      }
+      return this;
+    }
+  };
 
-    error: (xhr) =>
-      @set 'response', xhr.responseText || xhr.content
-      @set 'status', xhr.status
-      xhr.request = @
-      @fire 'error', xhr
-
-    complete: =>
-      @fire 'loaded'
-
-  if options.method in ['PUT', 'POST']
-    if @hasFileUploads()
-      options.data = @constructor.objectToFormData(data)
-    else
-      options.contentType = @get('contentType')
-      options.data = param(data)
-
-  else
-    options.data = data
-
-  # Fires the request. Grab a reference to the xhr object so we can get the status code elsewhere.
-  xhr = (reqwest options).request
-
-prefixes = ['Webkit', 'Moz', 'O', 'ms', '']
-Batman.mixins.animation =
-  initialize: ->
-    for prefix in prefixes
-      @style["#{prefix}Transform"] = 'scale(0, 0)'
-      @style.opacity = 0
-
-      @style["#{prefix}TransitionProperty"] = "#{if prefix then '-' + prefix.toLowerCase() + '-' else ''}transform, opacity"
-      @style["#{prefix}TransitionDuration"] = "0.8s, 0.55s"
-      @style["#{prefix}TransformOrigin"] = "left top"
-    @
-  show: (addToParent) ->
-    show = =>
-      @style.opacity = 1
-      for prefix in prefixes
-        @style["#{prefix}Transform"] = 'scale(1, 1)'
-      @
-
-    if addToParent
-      addToParent.append?.appendChild @
-      addToParent.before?.parentNode.insertBefore @, addToParent.before
-
-      setTimeout show, 0
-    else
-      show()
-    @
-  hide: (shouldRemove) ->
-    @style.opacity = 0
-    for prefix in prefixes
-      @style["#{prefix}Transform"] = 'scale(0, 0)'
-
-    setTimeout((=> @parentNode?.removeChild @), 600) if shouldRemove
-    @
+}).call(this);

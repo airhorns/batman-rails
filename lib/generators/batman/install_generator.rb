@@ -70,6 +70,7 @@ CODE
       def batman_requires(file_type=:javascript)
 code = <<-CODE
 \n// Batman.js and its adapters
+//= require batman/es5-shim
 //= require batman/batman
 //= require batman/batman.jquery
 //= require batman/batman.rails
