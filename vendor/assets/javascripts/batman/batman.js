@@ -52,23 +52,27 @@
 
   Batman.Inflector = (function() {
 
-    function Inflector() {}
-
-    Inflector.prototype.plural = [];
-
-    Inflector.prototype.singular = [];
-
-    Inflector.prototype.uncountable = [];
-
-    Inflector.plural = function(regex, replacement) {
-      return this.prototype.plural.unshift([regex, replacement]);
+    Inflector.prototype.plural = function(regex, replacement) {
+      return this._plural.unshift([regex, replacement]);
     };
 
-    Inflector.singular = function(regex, replacement) {
-      return this.prototype.singular.unshift([regex, replacement]);
+    Inflector.prototype.singular = function(regex, replacement) {
+      return this._singular.unshift([regex, replacement]);
     };
 
-    Inflector.irregular = function(singular, plural) {
+    Inflector.prototype.human = function(regex, replacement) {
+      return this._human.unshift([regex, replacement]);
+    };
+
+    Inflector.prototype.uncountable = function() {
+      var strings;
+      strings = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      return this._uncountable = this._uncountable.concat(strings.map(function(x) {
+        return new RegExp("" + x + "$", 'i');
+      }));
+    };
+
+    Inflector.prototype.irregular = function(singular, plural) {
       if (singular.charAt(0) === plural.charAt(0)) {
         this.plural(new RegExp("(" + (singular.charAt(0)) + ")" + (singular.slice(1)) + "$", "i"), "$1" + plural.slice(1));
         this.plural(new RegExp("(" + (singular.charAt(0)) + ")" + (plural.slice(1)) + "$", "i"), "$1" + plural.slice(1));
@@ -80,121 +84,12 @@
       }
     };
 
-    Inflector.uncountable = function() {
-      var strings;
-      strings = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      return this.prototype.uncountable = this.prototype.uncountable.concat(strings.map(function(x) {
-        return new RegExp("" + x + "$", 'i');
-      }));
-    };
-
-    Inflector.plural(/$/, 's');
-
-    Inflector.plural(/s$/i, 's');
-
-    Inflector.plural(/(ax|test)is$/i, '$1es');
-
-    Inflector.plural(/(octop|vir)us$/i, '$1i');
-
-    Inflector.plural(/(octop|vir)i$/i, '$1i');
-
-    Inflector.plural(/(alias|status)$/i, '$1es');
-
-    Inflector.plural(/(bu)s$/i, '$1ses');
-
-    Inflector.plural(/(buffal|tomat)o$/i, '$1oes');
-
-    Inflector.plural(/([ti])um$/i, '$1a');
-
-    Inflector.plural(/([ti])a$/i, '$1a');
-
-    Inflector.plural(/sis$/i, 'ses');
-
-    Inflector.plural(/(?:([^f])fe|([lr])f)$/i, '$1$2ves');
-
-    Inflector.plural(/(hive)$/i, '$1s');
-
-    Inflector.plural(/([^aeiouy]|qu)y$/i, '$1ies');
-
-    Inflector.plural(/(x|ch|ss|sh)$/i, '$1es');
-
-    Inflector.plural(/(matr|vert|ind)(?:ix|ex)$/i, '$1ices');
-
-    Inflector.plural(/([m|l])ouse$/i, '$1ice');
-
-    Inflector.plural(/([m|l])ice$/i, '$1ice');
-
-    Inflector.plural(/^(ox)$/i, '$1en');
-
-    Inflector.plural(/^(oxen)$/i, '$1');
-
-    Inflector.plural(/(quiz)$/i, '$1zes');
-
-    Inflector.singular(/s$/i, '');
-
-    Inflector.singular(/(n)ews$/i, '$1ews');
-
-    Inflector.singular(/([ti])a$/i, '$1um');
-
-    Inflector.singular(/((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)ses$/i, '$1$2sis');
-
-    Inflector.singular(/(^analy)ses$/i, '$1sis');
-
-    Inflector.singular(/([^f])ves$/i, '$1fe');
-
-    Inflector.singular(/(hive)s$/i, '$1');
-
-    Inflector.singular(/(tive)s$/i, '$1');
-
-    Inflector.singular(/([lr])ves$/i, '$1f');
-
-    Inflector.singular(/([^aeiouy]|qu)ies$/i, '$1y');
-
-    Inflector.singular(/(s)eries$/i, '$1eries');
-
-    Inflector.singular(/(m)ovies$/i, '$1ovie');
-
-    Inflector.singular(/(x|ch|ss|sh)es$/i, '$1');
-
-    Inflector.singular(/([m|l])ice$/i, '$1ouse');
-
-    Inflector.singular(/(bus)es$/i, '$1');
-
-    Inflector.singular(/(o)es$/i, '$1');
-
-    Inflector.singular(/(shoe)s$/i, '$1');
-
-    Inflector.singular(/(cris|ax|test)es$/i, '$1is');
-
-    Inflector.singular(/(octop|vir)i$/i, '$1us');
-
-    Inflector.singular(/(alias|status)es$/i, '$1');
-
-    Inflector.singular(/^(ox)en/i, '$1');
-
-    Inflector.singular(/(vert|ind)ices$/i, '$1ex');
-
-    Inflector.singular(/(matr)ices$/i, '$1ix');
-
-    Inflector.singular(/(quiz)zes$/i, '$1');
-
-    Inflector.singular(/(database)s$/i, '$1');
-
-    Inflector.irregular('person', 'people');
-
-    Inflector.irregular('man', 'men');
-
-    Inflector.irregular('child', 'children');
-
-    Inflector.irregular('sex', 'sexes');
-
-    Inflector.irregular('move', 'moves');
-
-    Inflector.irregular('cow', 'kine');
-
-    Inflector.irregular('zombie', 'zombies');
-
-    Inflector.uncountable('equipment', 'information', 'rice', 'money', 'species', 'series', 'fish', 'sheep', 'jeans');
+    function Inflector() {
+      this._plural = [];
+      this._singular = [];
+      this._uncountable = [];
+      this._human = [];
+    }
 
     Inflector.prototype.ordinalize = function(number) {
       var absNumber, _ref;
@@ -217,14 +112,14 @@
 
     Inflector.prototype.pluralize = function(word) {
       var regex, replace_string, uncountableRegex, _i, _j, _len, _len1, _ref, _ref1, _ref2;
-      _ref = this.uncountable;
+      _ref = this._uncountable;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         uncountableRegex = _ref[_i];
         if (uncountableRegex.test(word)) {
           return word;
         }
       }
-      _ref1 = this.plural;
+      _ref1 = this._plural;
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         _ref2 = _ref1[_j], regex = _ref2[0], replace_string = _ref2[1];
         if (regex.test(word)) {
@@ -236,16 +131,28 @@
 
     Inflector.prototype.singularize = function(word) {
       var regex, replace_string, uncountableRegex, _i, _j, _len, _len1, _ref, _ref1, _ref2;
-      _ref = this.uncountable;
+      _ref = this._uncountable;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         uncountableRegex = _ref[_i];
         if (uncountableRegex.test(word)) {
           return word;
         }
       }
-      _ref1 = this.singular;
+      _ref1 = this._singular;
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         _ref2 = _ref1[_j], regex = _ref2[0], replace_string = _ref2[1];
+        if (regex.test(word)) {
+          return word.replace(regex, replace_string);
+        }
+      }
+      return word;
+    };
+
+    Inflector.prototype.humanize = function(word) {
+      var regex, replace_string, _i, _len, _ref, _ref1;
+      _ref = this._human;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        _ref1 = _ref[_i], regex = _ref1[0], replace_string = _ref1[1];
         if (regex.test(word)) {
           return word.replace(regex, replace_string);
         }
@@ -260,7 +167,7 @@
 }).call(this);
 
 (function() {
-  var camelize_rx, capitalize_rx, underscore_rx1, underscore_rx2;
+  var Inflector, camelize_rx, capitalize_rx, humanize_rx1, humanize_rx2, humanize_rx3, underscore_rx1, underscore_rx2;
 
   camelize_rx = /(?:^|_|\-)(.)/g;
 
@@ -270,8 +177,13 @@
 
   underscore_rx2 = /([a-z\d])([A-Z])/g;
 
+  humanize_rx1 = /_id$/;
+
+  humanize_rx2 = /_|-/g;
+
+  humanize_rx3 = /^\w/g;
+
   Batman.helpers = {
-    inflector: new Batman.Inflector,
     ordinalize: function() {
       return Batman.helpers.inflector.ordinalize.apply(Batman.helpers.inflector, arguments);
     },
@@ -333,8 +245,127 @@
         string = string.replace(new RegExp("%\\{" + key + "\\}", "g"), value);
       }
       return string;
+    },
+    humanize: function(string) {
+      string = Batman.helpers.underscore(string);
+      string = Batman.helpers.inflector.humanize(string);
+      return string.replace(humanize_rx1, '').replace(humanize_rx2, ' ').replace(humanize_rx3, function(match) {
+        return match.toUpperCase();
+      });
     }
   };
+
+  Inflector = new Batman.Inflector;
+
+  Batman.helpers.inflector = Inflector;
+
+  Inflector.plural(/$/, 's');
+
+  Inflector.plural(/s$/i, 's');
+
+  Inflector.plural(/(ax|test)is$/i, '$1es');
+
+  Inflector.plural(/(octop|vir)us$/i, '$1i');
+
+  Inflector.plural(/(octop|vir)i$/i, '$1i');
+
+  Inflector.plural(/(alias|status)$/i, '$1es');
+
+  Inflector.plural(/(bu)s$/i, '$1ses');
+
+  Inflector.plural(/(buffal|tomat)o$/i, '$1oes');
+
+  Inflector.plural(/([ti])um$/i, '$1a');
+
+  Inflector.plural(/([ti])a$/i, '$1a');
+
+  Inflector.plural(/sis$/i, 'ses');
+
+  Inflector.plural(/(?:([^f])fe|([lr])f)$/i, '$1$2ves');
+
+  Inflector.plural(/(hive)$/i, '$1s');
+
+  Inflector.plural(/([^aeiouy]|qu)y$/i, '$1ies');
+
+  Inflector.plural(/(x|ch|ss|sh)$/i, '$1es');
+
+  Inflector.plural(/(matr|vert|ind)(?:ix|ex)$/i, '$1ices');
+
+  Inflector.plural(/([m|l])ouse$/i, '$1ice');
+
+  Inflector.plural(/([m|l])ice$/i, '$1ice');
+
+  Inflector.plural(/^(ox)$/i, '$1en');
+
+  Inflector.plural(/^(oxen)$/i, '$1');
+
+  Inflector.plural(/(quiz)$/i, '$1zes');
+
+  Inflector.singular(/s$/i, '');
+
+  Inflector.singular(/(n)ews$/i, '$1ews');
+
+  Inflector.singular(/([ti])a$/i, '$1um');
+
+  Inflector.singular(/((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)ses$/i, '$1$2sis');
+
+  Inflector.singular(/(^analy)ses$/i, '$1sis');
+
+  Inflector.singular(/([^f])ves$/i, '$1fe');
+
+  Inflector.singular(/(hive)s$/i, '$1');
+
+  Inflector.singular(/(tive)s$/i, '$1');
+
+  Inflector.singular(/([lr])ves$/i, '$1f');
+
+  Inflector.singular(/([^aeiouy]|qu)ies$/i, '$1y');
+
+  Inflector.singular(/(s)eries$/i, '$1eries');
+
+  Inflector.singular(/(m)ovies$/i, '$1ovie');
+
+  Inflector.singular(/(x|ch|ss|sh)es$/i, '$1');
+
+  Inflector.singular(/([m|l])ice$/i, '$1ouse');
+
+  Inflector.singular(/(bus)es$/i, '$1');
+
+  Inflector.singular(/(o)es$/i, '$1');
+
+  Inflector.singular(/(shoe)s$/i, '$1');
+
+  Inflector.singular(/(cris|ax|test)es$/i, '$1is');
+
+  Inflector.singular(/(octop|vir)i$/i, '$1us');
+
+  Inflector.singular(/(alias|status)es$/i, '$1');
+
+  Inflector.singular(/^(ox)en/i, '$1');
+
+  Inflector.singular(/(vert|ind)ices$/i, '$1ex');
+
+  Inflector.singular(/(matr)ices$/i, '$1ix');
+
+  Inflector.singular(/(quiz)zes$/i, '$1');
+
+  Inflector.singular(/(database)s$/i, '$1');
+
+  Inflector.irregular('person', 'people');
+
+  Inflector.irregular('man', 'men');
+
+  Inflector.irregular('child', 'children');
+
+  Inflector.irregular('sex', 'sexes');
+
+  Inflector.irregular('move', 'moves');
+
+  Inflector.irregular('cow', 'kine');
+
+  Inflector.irregular('zombie', 'zombies');
+
+  Inflector.uncountable('equipment', 'information', 'rice', 'money', 'species', 'series', 'fish', 'sheep', 'jeans');
 
 }).call(this);
 
@@ -510,6 +541,23 @@
       };
       Batman.clearImmediate = function(handle) {
         return tasks.unset(handle);
+      };
+    } else if (typeof process !== "undefined" && process !== null ? process.nextTick : void 0) {
+      functions = {};
+      Batman.setImmediate = function(f) {
+        var handle;
+        handle = getHandle();
+        functions[handle] = f;
+        process.nextTick(function() {
+          if (typeof functions[handle] === "function") {
+            functions[handle]();
+          }
+          return delete functions[handle];
+        });
+        return handle;
+      };
+      Batman.clearImmediate = function(handle) {
+        return delete functions[handle];
       };
     } else {
       Batman.setImmediate = function(f) {
@@ -1177,6 +1225,328 @@
 (function() {
   var __slice = [].slice;
 
+  Batman.SimpleHash = (function() {
+
+    function SimpleHash(obj) {
+      this._storage = {};
+      this.length = 0;
+      if (obj != null) {
+        this.update(obj);
+      }
+    }
+
+    Batman.extend(SimpleHash.prototype, Batman.Enumerable);
+
+    SimpleHash.prototype.propertyClass = Batman.Property;
+
+    SimpleHash.prototype.hasKey = function(key) {
+      var pair, pairs, _i, _len;
+      if (this.objectKey(key)) {
+        if (!this._objectStorage) {
+          return false;
+        }
+        if (pairs = this._objectStorage[this.hashKeyFor(key)]) {
+          for (_i = 0, _len = pairs.length; _i < _len; _i++) {
+            pair = pairs[_i];
+            if (this.equality(pair[0], key)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      } else {
+        key = this.prefixedKey(key);
+        return this._storage.hasOwnProperty(key);
+      }
+    };
+
+    SimpleHash.prototype.get = function(key) {
+      var pair, pairs, _i, _len;
+      if (this.objectKey(key)) {
+        if (!this._objectStorage) {
+          return void 0;
+        }
+        if (pairs = this._objectStorage[this.hashKeyFor(key)]) {
+          for (_i = 0, _len = pairs.length; _i < _len; _i++) {
+            pair = pairs[_i];
+            if (this.equality(pair[0], key)) {
+              return pair[1];
+            }
+          }
+        }
+      } else {
+        return this._storage[this.prefixedKey(key)];
+      }
+    };
+
+    SimpleHash.prototype.set = function(key, val) {
+      var pair, pairs, _base, _i, _len, _name;
+      if (this.objectKey(key)) {
+        this._objectStorage || (this._objectStorage = {});
+        pairs = (_base = this._objectStorage)[_name = this.hashKeyFor(key)] || (_base[_name] = []);
+        for (_i = 0, _len = pairs.length; _i < _len; _i++) {
+          pair = pairs[_i];
+          if (this.equality(pair[0], key)) {
+            return pair[1] = val;
+          }
+        }
+        this.length++;
+        pairs.push([key, val]);
+        return val;
+      } else {
+        key = this.prefixedKey(key);
+        if (this._storage[key] == null) {
+          this.length++;
+        }
+        return this._storage[key] = val;
+      }
+    };
+
+    SimpleHash.prototype.unset = function(key) {
+      var hashKey, index, obj, pair, pairs, val, value, _i, _len, _ref;
+      if (this.objectKey(key)) {
+        if (!this._objectStorage) {
+          return void 0;
+        }
+        hashKey = this.hashKeyFor(key);
+        if (pairs = this._objectStorage[hashKey]) {
+          for (index = _i = 0, _len = pairs.length; _i < _len; index = ++_i) {
+            _ref = pairs[index], obj = _ref[0], value = _ref[1];
+            if (this.equality(obj, key)) {
+              pair = pairs.splice(index, 1);
+              if (!pairs.length) {
+                delete this._objectStorage[hashKey];
+              }
+              this.length--;
+              return pair[0][1];
+            }
+          }
+        }
+      } else {
+        key = this.prefixedKey(key);
+        val = this._storage[key];
+        if (this._storage[key] != null) {
+          this.length--;
+          delete this._storage[key];
+        }
+        return val;
+      }
+    };
+
+    SimpleHash.prototype.getOrSet = function(key, valueFunction) {
+      var currentValue;
+      currentValue = this.get(key);
+      if (!currentValue) {
+        currentValue = valueFunction();
+        this.set(key, currentValue);
+      }
+      return currentValue;
+    };
+
+    SimpleHash.prototype.prefixedKey = function(key) {
+      return "_" + key;
+    };
+
+    SimpleHash.prototype.unprefixedKey = function(key) {
+      return key.slice(1);
+    };
+
+    SimpleHash.prototype.hashKeyFor = function(obj) {
+      return (obj != null ? typeof obj.hashKey === "function" ? obj.hashKey() : void 0 : void 0) || obj;
+    };
+
+    SimpleHash.prototype.equality = function(lhs, rhs) {
+      if (lhs === rhs) {
+        return true;
+      }
+      if (lhs !== lhs && rhs !== rhs) {
+        return true;
+      }
+      if ((lhs != null ? typeof lhs.isEqual === "function" ? lhs.isEqual(rhs) : void 0 : void 0) && (rhs != null ? typeof rhs.isEqual === "function" ? rhs.isEqual(lhs) : void 0 : void 0)) {
+        return true;
+      }
+      return false;
+    };
+
+    SimpleHash.prototype.objectKey = function(key) {
+      return typeof key !== 'string';
+    };
+
+    SimpleHash.prototype.forEach = function(iterator, ctx) {
+      var key, obj, results, value, values, _i, _len, _ref, _ref1, _ref2, _ref3;
+      results = [];
+      if (this._objectStorage) {
+        _ref = this._objectStorage;
+        for (key in _ref) {
+          values = _ref[key];
+          _ref1 = values.slice();
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            _ref2 = _ref1[_i], obj = _ref2[0], value = _ref2[1];
+            results.push(iterator.call(ctx, obj, value, this));
+          }
+        }
+      }
+      _ref3 = this._storage;
+      for (key in _ref3) {
+        value = _ref3[key];
+        results.push(iterator.call(ctx, this.unprefixedKey(key), value, this));
+      }
+      return results;
+    };
+
+    SimpleHash.prototype.keys = function() {
+      var result;
+      result = [];
+      Batman.SimpleHash.prototype.forEach.call(this, function(key) {
+        return result.push(key);
+      });
+      return result;
+    };
+
+    SimpleHash.prototype.toArray = SimpleHash.prototype.keys;
+
+    SimpleHash.prototype.clear = function() {
+      this._storage = {};
+      delete this._objectStorage;
+      return this.length = 0;
+    };
+
+    SimpleHash.prototype.isEmpty = function() {
+      return this.length === 0;
+    };
+
+    SimpleHash.prototype.merge = function() {
+      var hash, merged, others, _i, _len;
+      others = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      merged = new this.constructor;
+      others.unshift(this);
+      for (_i = 0, _len = others.length; _i < _len; _i++) {
+        hash = others[_i];
+        hash.forEach(function(obj, value) {
+          return merged.set(obj, value);
+        });
+      }
+      return merged;
+    };
+
+    SimpleHash.prototype.update = function(object) {
+      var k, v, _results;
+      _results = [];
+      for (k in object) {
+        v = object[k];
+        _results.push(this.set(k, v));
+      }
+      return _results;
+    };
+
+    SimpleHash.prototype.replace = function(object) {
+      var _this = this;
+      this.forEach(function(key, value) {
+        if (!(key in object)) {
+          return _this.unset(key);
+        }
+      });
+      return this.update(object);
+    };
+
+    SimpleHash.prototype.toObject = function() {
+      var key, obj, pair, value, _ref, _ref1;
+      obj = {};
+      _ref = this._storage;
+      for (key in _ref) {
+        value = _ref[key];
+        obj[this.unprefixedKey(key)] = value;
+      }
+      if (this._objectStorage) {
+        _ref1 = this._objectStorage;
+        for (key in _ref1) {
+          pair = _ref1[key];
+          obj[key] = pair[0][1];
+        }
+      }
+      return obj;
+    };
+
+    SimpleHash.prototype.toJSON = SimpleHash.prototype.toObject;
+
+    return SimpleHash;
+
+  })();
+
+}).call(this);
+
+(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __slice = [].slice;
+
+  Batman.AssociationCurator = (function(_super) {
+
+    __extends(AssociationCurator, _super);
+
+    AssociationCurator.availableAssociations = ['belongsTo', 'hasOne', 'hasMany'];
+
+    function AssociationCurator(model) {
+      this.model = model;
+      AssociationCurator.__super__.constructor.call(this);
+      this._byTypeStorage = new Batman.SimpleHash;
+    }
+
+    AssociationCurator.prototype.add = function(association) {
+      var associationTypeSet;
+      this.set(association.label, association);
+      if (!(associationTypeSet = this._byTypeStorage.get(association.associationType))) {
+        associationTypeSet = new Batman.SimpleSet;
+        this._byTypeStorage.set(association.associationType, associationTypeSet);
+      }
+      return associationTypeSet.add(association);
+    };
+
+    AssociationCurator.prototype.getByType = function(type) {
+      return this._byTypeStorage.get(type);
+    };
+
+    AssociationCurator.prototype.getByLabel = function(label) {
+      return this.get(label);
+    };
+
+    AssociationCurator.prototype.reset = function() {
+      this.forEach(function(label, association) {
+        return association.reset();
+      });
+      return true;
+    };
+
+    AssociationCurator.prototype.merge = function() {
+      var others, result;
+      others = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      result = AssociationCurator.__super__.merge.apply(this, arguments);
+      result._byTypeStorage = this._byTypeStorage.merge(others.map(function(other) {
+        return other._byTypeStorage;
+      }));
+      return result;
+    };
+
+    AssociationCurator.prototype._markDirtyAttribute = function(key, oldValue) {
+      var _ref;
+      if ((_ref = this.lifecycle.get('state')) !== 'loading' && _ref !== 'creating' && _ref !== 'saving' && _ref !== 'saved') {
+        if (this.lifecycle.startTransition('set')) {
+          return this.dirtyKeys.set(key, oldValue);
+        } else {
+          throw new Batman.StateMachine.InvalidTransitionError("Can't set while in state " + (this.lifecycle.get('state')));
+        }
+      }
+    };
+
+    return AssociationCurator;
+
+  })(Batman.SimpleHash);
+
+}).call(this);
+
+(function() {
+  var __slice = [].slice;
+
   Batman.SimpleSet = (function() {
 
     function SimpleSet() {
@@ -1190,7 +1560,7 @@
     Batman.extend(SimpleSet.prototype, Batman.Enumerable);
 
     SimpleSet.prototype.has = function(item) {
-      return !!(~this._storage.indexOf(item));
+      return !!(~this._indexOfItem(item));
     };
 
     SimpleSet.prototype.add = function() {
@@ -1199,7 +1569,7 @@
       addedItems = [];
       for (_i = 0, _len = items.length; _i < _len; _i++) {
         item = items[_i];
-        if (!(!~this._storage.indexOf(item))) {
+        if (!(!~this._indexOfItem(item))) {
           continue;
         }
         this._storage.push(item);
@@ -1219,7 +1589,7 @@
       removedItems = [];
       for (_i = 0, _len = items.length; _i < _len; _i++) {
         item = items[_i];
-        if (!(~(index = this._storage.indexOf(item)))) {
+        if (!(~(index = this._indexOfItem(item)))) {
           continue;
         }
         this._storage.splice(index, 1);
@@ -1321,6 +1691,20 @@
       return sortsForKey.get(order) || sortsForKey.set(order, new Batman.SetSort(this, key, order));
     };
 
+    SimpleSet.prototype.equality = Batman.SimpleHash.prototype.equality;
+
+    SimpleSet.prototype._indexOfItem = function(givenItem) {
+      var index, item, _i, _len, _ref;
+      _ref = this._storage;
+      for (index = _i = 0, _len = _ref.length; _i < _len; index = ++_i) {
+        item = _ref[index];
+        if (this.equality(givenItem, item)) {
+          return index;
+        }
+      }
+      return -1;
+    };
+
     return SimpleSet;
 
   })();
@@ -1328,6 +1712,7 @@
 }).call(this);
 
 (function() {
+  var __slice = [].slice;
 
   Batman.Property = (function() {
 
@@ -1649,7 +2034,7 @@
 
     Property.prototype.observeAndFire = function(handler) {
       this.observe(handler);
-      return handler.call(this.base, this.value, this.value);
+      return handler.call(this.base, this.value, this.value, this.key);
     };
 
     Property.prototype.observe = function(handler) {
@@ -1705,7 +2090,7 @@
 
     Property.prototype.fire = function() {
       var _ref;
-      return (_ref = this.changeEvent()).fire.apply(_ref, arguments);
+      return (_ref = this.changeEvent()).fire.apply(_ref, __slice.call(arguments).concat([this.key]));
     };
 
     Property.prototype.isolate = function() {
@@ -1833,15 +2218,7 @@
     unset: function(key) {
       return this.property(key).unsetValue();
     },
-    getOrSet: function(key, valueFunction) {
-      var currentValue;
-      currentValue = this.get(key);
-      if (!currentValue) {
-        currentValue = valueFunction();
-        this.set(key, currentValue);
-      }
-      return currentValue;
-    },
+    getOrSet: Batman.SimpleHash.prototype.getOrSet,
     forget: function(key, observer) {
       var _ref;
       if (key) {
@@ -1881,6 +2258,24 @@
 
   Batman.DOM = {
     textInputTypes: ['text', 'search', 'tel', 'url', 'email', 'password'],
+    scrollIntoView: function(elementID) {
+      var _ref;
+      return (_ref = document.getElementById(elementID)) != null ? typeof _ref.scrollIntoView === "function" ? _ref.scrollIntoView() : void 0 : void 0;
+    },
+    querySelectorAll: window.jQuery != null ? function(node, selector) {
+      return jQuery(selector, node);
+    } : document.querySelectorAll != null ? function(node, selector) {
+      return node.querySelectorAll(selector);
+    } : function() {
+      return Batman.developer.error("Please include either jQuery or a querySelectorAll polyfill, or set Batman.DOM.querySelectorAll to return an empty array.");
+    },
+    querySelector: window.jQuery != null ? function(node, selector) {
+      return jQuery(selector, node)[0];
+    } : document.querySelector != null ? function(node, selector) {
+      return node.querySelector(selector);
+    } : function() {
+      return Batman.developer.error("Please include either jQuery or a querySelector polyfill, or set Batman.DOM.querySelector to an empty function.");
+    },
     partial: function(container, path, context, renderer) {
       var view;
       renderer.prevent('rendered');
@@ -1943,6 +2338,12 @@
     },
     forgetParseExit: Batman.forgetParseExit = function(node, callback) {
       return Batman.removeData(node, 'onParseExit', true);
+    },
+    defineView: function(name, node) {
+      var contents;
+      contents = node.innerHTML;
+      Batman.View.store.set(Batman.Navigator.normalizePath(name), contents);
+      return contents;
     },
     setInnerHTML: Batman.setInnerHTML = function(node, html) {
       var child, childNodes, result, _i, _j, _len, _len1;
@@ -2276,6 +2677,14 @@
       var _ref;
       return (_ref = Batman.DOM.readers).showif.apply(_ref, __slice.call(arguments).concat([true]));
     },
+    insertif: function(node, key, context, parentRenderer, invert) {
+      new Batman.DOM.InsertionBinding(node, key, context, parentRenderer, false, invert);
+      return true;
+    },
+    removeif: function() {
+      var _ref;
+      return (_ref = Batman.DOM.readers).insertif.apply(_ref, __slice.call(arguments).concat([true]));
+    },
     route: function() {
       (function(func, args, ctor) {
         ctor.prototype = func.prototype;
@@ -2298,9 +2707,10 @@
     },
     defineview: function(node, name, context, renderer) {
       Batman.onParseExit(node, function() {
-        return Batman.destroyNode(node);
+        var _ref;
+        return (_ref = node.parentNode) != null ? _ref.removeChild(node) : void 0;
       });
-      Batman.View.store.set(Batman.Navigator.normalizePath(name), node.innerHTML);
+      Batman.DOM.defineView(name, node);
       return false;
     },
     renderif: function(node, key, context, renderer) {
@@ -2363,20 +2773,19 @@
         var _ref;
         switch (node.nodeName.toUpperCase()) {
           case 'TEXTAREA':
-            return ['keyup', 'change'];
+            return ['input', 'keyup', 'change'];
           case 'INPUT':
             if (_ref = node.type.toLowerCase(), __indexOf.call(Batman.DOM.textInputTypes, _ref) >= 0) {
               oldCallback = callback;
-              callback = function(e) {
-                var _ref1;
-                if (e.type === 'keyup' && (13 <= (_ref1 = e.keyCode) && _ref1 <= 14)) {
+              callback = function(node, event) {
+                if (event.type === 'keyup' && Batman.DOM.events.isEnter(event)) {
                   return;
                 }
                 return oldCallback.apply(null, arguments);
               };
-              return ['keyup', 'change'];
+              return ['input', 'keyup', 'change'];
             } else {
-              return ['change'];
+              return ['input', 'change'];
             }
             break;
           default:
@@ -2395,7 +2804,8 @@
       return _results;
     },
     isEnter: function(ev) {
-      return ev.keyCode === 13 || ev.which === 13 || ev.keyIdentifier === 'Enter' || ev.key === 'Enter';
+      var _ref, _ref1;
+      return ((13 <= (_ref = ev.keyCode) && _ref <= 14)) || ((13 <= (_ref1 = ev.which) && _ref1 <= 14)) || ev.keyIdentifier === 'Enter' || ev.key === 'Enter';
     },
     submit: function(node, callback, context) {
       if (Batman.DOM.nodeIsEditable(node)) {
@@ -2520,318 +2930,6 @@
 }).call(this);
 
 (function() {
-  var __slice = [].slice;
-
-  Batman.SimpleHash = (function() {
-
-    function SimpleHash(obj) {
-      this._storage = {};
-      this.length = 0;
-      if (obj != null) {
-        this.update(obj);
-      }
-    }
-
-    Batman.extend(SimpleHash.prototype, Batman.Enumerable);
-
-    SimpleHash.prototype.propertyClass = Batman.Property;
-
-    SimpleHash.prototype.hasKey = function(key) {
-      var pair, pairs, _i, _len;
-      if (this.objectKey(key)) {
-        if (!this._objectStorage) {
-          return false;
-        }
-        if (pairs = this._objectStorage[this.hashKeyFor(key)]) {
-          for (_i = 0, _len = pairs.length; _i < _len; _i++) {
-            pair = pairs[_i];
-            if (this.equality(pair[0], key)) {
-              return true;
-            }
-          }
-        }
-        return false;
-      } else {
-        key = this.prefixedKey(key);
-        return this._storage.hasOwnProperty(key);
-      }
-    };
-
-    SimpleHash.prototype.get = function(key) {
-      var pair, pairs, _i, _len;
-      if (this.objectKey(key)) {
-        if (!this._objectStorage) {
-          return void 0;
-        }
-        if (pairs = this._objectStorage[this.hashKeyFor(key)]) {
-          for (_i = 0, _len = pairs.length; _i < _len; _i++) {
-            pair = pairs[_i];
-            if (this.equality(pair[0], key)) {
-              return pair[1];
-            }
-          }
-        }
-      } else {
-        return this._storage[this.prefixedKey(key)];
-      }
-    };
-
-    SimpleHash.prototype.set = function(key, val) {
-      var pair, pairs, _base, _i, _len, _name;
-      if (this.objectKey(key)) {
-        this._objectStorage || (this._objectStorage = {});
-        pairs = (_base = this._objectStorage)[_name = this.hashKeyFor(key)] || (_base[_name] = []);
-        for (_i = 0, _len = pairs.length; _i < _len; _i++) {
-          pair = pairs[_i];
-          if (this.equality(pair[0], key)) {
-            return pair[1] = val;
-          }
-        }
-        this.length++;
-        pairs.push([key, val]);
-        return val;
-      } else {
-        key = this.prefixedKey(key);
-        if (this._storage[key] == null) {
-          this.length++;
-        }
-        return this._storage[key] = val;
-      }
-    };
-
-    SimpleHash.prototype.unset = function(key) {
-      var hashKey, index, obj, pair, pairs, val, value, _i, _len, _ref;
-      if (this.objectKey(key)) {
-        if (!this._objectStorage) {
-          return void 0;
-        }
-        hashKey = this.hashKeyFor(key);
-        if (pairs = this._objectStorage[hashKey]) {
-          for (index = _i = 0, _len = pairs.length; _i < _len; index = ++_i) {
-            _ref = pairs[index], obj = _ref[0], value = _ref[1];
-            if (this.equality(obj, key)) {
-              pair = pairs.splice(index, 1);
-              if (!pairs.length) {
-                delete this._objectStorage[hashKey];
-              }
-              this.length--;
-              return pair[0][1];
-            }
-          }
-        }
-      } else {
-        key = this.prefixedKey(key);
-        val = this._storage[key];
-        if (this._storage[key] != null) {
-          this.length--;
-          delete this._storage[key];
-        }
-        return val;
-      }
-    };
-
-    SimpleHash.prototype.getOrSet = Batman.Observable.getOrSet;
-
-    SimpleHash.prototype.prefixedKey = function(key) {
-      return "_" + key;
-    };
-
-    SimpleHash.prototype.unprefixedKey = function(key) {
-      return key.slice(1);
-    };
-
-    SimpleHash.prototype.hashKeyFor = function(obj) {
-      return (obj != null ? typeof obj.hashKey === "function" ? obj.hashKey() : void 0 : void 0) || obj;
-    };
-
-    SimpleHash.prototype.equality = function(lhs, rhs) {
-      if (lhs === rhs) {
-        return true;
-      }
-      if (lhs !== lhs && rhs !== rhs) {
-        return true;
-      }
-      if ((lhs != null ? typeof lhs.isEqual === "function" ? lhs.isEqual(rhs) : void 0 : void 0) && (rhs != null ? typeof rhs.isEqual === "function" ? rhs.isEqual(lhs) : void 0 : void 0)) {
-        return true;
-      }
-      return false;
-    };
-
-    SimpleHash.prototype.objectKey = function(key) {
-      return typeof key !== 'string';
-    };
-
-    SimpleHash.prototype.forEach = function(iterator, ctx) {
-      var key, obj, results, value, values, _i, _len, _ref, _ref1, _ref2, _ref3;
-      results = [];
-      if (this._objectStorage) {
-        _ref = this._objectStorage;
-        for (key in _ref) {
-          values = _ref[key];
-          _ref1 = values.slice();
-          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            _ref2 = _ref1[_i], obj = _ref2[0], value = _ref2[1];
-            results.push(iterator.call(ctx, obj, value, this));
-          }
-        }
-      }
-      _ref3 = this._storage;
-      for (key in _ref3) {
-        value = _ref3[key];
-        results.push(iterator.call(ctx, this.unprefixedKey(key), value, this));
-      }
-      return results;
-    };
-
-    SimpleHash.prototype.keys = function() {
-      var result;
-      result = [];
-      Batman.SimpleHash.prototype.forEach.call(this, function(key) {
-        return result.push(key);
-      });
-      return result;
-    };
-
-    SimpleHash.prototype.clear = function() {
-      this._storage = {};
-      delete this._objectStorage;
-      return this.length = 0;
-    };
-
-    SimpleHash.prototype.isEmpty = function() {
-      return this.length === 0;
-    };
-
-    SimpleHash.prototype.merge = function() {
-      var hash, merged, others, _i, _len;
-      others = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      merged = new this.constructor;
-      others.unshift(this);
-      for (_i = 0, _len = others.length; _i < _len; _i++) {
-        hash = others[_i];
-        hash.forEach(function(obj, value) {
-          return merged.set(obj, value);
-        });
-      }
-      return merged;
-    };
-
-    SimpleHash.prototype.update = function(object) {
-      var k, v, _results;
-      _results = [];
-      for (k in object) {
-        v = object[k];
-        _results.push(this.set(k, v));
-      }
-      return _results;
-    };
-
-    SimpleHash.prototype.replace = function(object) {
-      var _this = this;
-      this.forEach(function(key, value) {
-        if (!(key in object)) {
-          return _this.unset(key);
-        }
-      });
-      return this.update(object);
-    };
-
-    SimpleHash.prototype.toObject = function() {
-      var key, obj, pair, value, _ref, _ref1;
-      obj = {};
-      _ref = this._storage;
-      for (key in _ref) {
-        value = _ref[key];
-        obj[this.unprefixedKey(key)] = value;
-      }
-      if (this._objectStorage) {
-        _ref1 = this._objectStorage;
-        for (key in _ref1) {
-          pair = _ref1[key];
-          obj[key] = pair[0][1];
-        }
-      }
-      return obj;
-    };
-
-    SimpleHash.prototype.toJSON = SimpleHash.prototype.toObject;
-
-    return SimpleHash;
-
-  })();
-
-}).call(this);
-
-(function() {
-  var __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __slice = [].slice;
-
-  Batman.AssociationCurator = (function(_super) {
-
-    __extends(AssociationCurator, _super);
-
-    AssociationCurator.availableAssociations = ['belongsTo', 'hasOne', 'hasMany'];
-
-    function AssociationCurator(model) {
-      this.model = model;
-      AssociationCurator.__super__.constructor.call(this);
-      this._byTypeStorage = new Batman.SimpleHash;
-    }
-
-    AssociationCurator.prototype.add = function(association) {
-      var associationTypeSet;
-      this.set(association.label, association);
-      if (!(associationTypeSet = this._byTypeStorage.get(association.associationType))) {
-        associationTypeSet = new Batman.SimpleSet;
-        this._byTypeStorage.set(association.associationType, associationTypeSet);
-      }
-      return associationTypeSet.add(association);
-    };
-
-    AssociationCurator.prototype.getByType = function(type) {
-      return this._byTypeStorage.get(type);
-    };
-
-    AssociationCurator.prototype.getByLabel = function(label) {
-      return this.get(label);
-    };
-
-    AssociationCurator.prototype.reset = function() {
-      this.forEach(function(label, association) {
-        return association.reset();
-      });
-      return true;
-    };
-
-    AssociationCurator.prototype.merge = function() {
-      var others, result;
-      others = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      result = AssociationCurator.__super__.merge.apply(this, arguments);
-      result._byTypeStorage = this._byTypeStorage.merge(others.map(function(other) {
-        return other._byTypeStorage;
-      }));
-      return result;
-    };
-
-    AssociationCurator.prototype._markDirtyAttribute = function(key, oldValue) {
-      var _ref;
-      if ((_ref = this.lifecycle.get('state')) !== 'loading' && _ref !== 'creating' && _ref !== 'saving' && _ref !== 'saved') {
-        if (this.lifecycle.startTransition('set')) {
-          return this.dirtyKeys.set(key, oldValue);
-        } else {
-          throw new Batman.StateMachine.InvalidTransitionError("Can't set while in state " + (this.lifecycle.get('state')));
-        }
-      }
-    };
-
-    return AssociationCurator;
-
-  })(Batman.SimpleHash);
-
-}).call(this);
-
-(function() {
   var BatmanObject,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2858,9 +2956,9 @@
 
     counter = 0;
 
-    BatmanObject.prototype._objectID = function() {
+    BatmanObject.prototype._batmanID = function() {
       var c;
-      this._objectID = function() {
+      this._batmanID = function() {
         return c;
       };
       return c = counter++;
@@ -2874,7 +2972,7 @@
       this.hashKey = function() {
         return key;
       };
-      return key = "<Batman.Object " + (this._objectID()) + ">";
+      return key = "<Batman.Object " + (this._batmanID()) + ">";
     };
 
     BatmanObject.prototype.toJSON = function() {
@@ -2883,7 +2981,7 @@
       for (key in this) {
         if (!__hasProp.call(this, key)) continue;
         value = this[key];
-        if (key !== "_batman" && key !== "hashKey" && key !== "_objectID") {
+        if (key !== "_batman" && key !== "hashKey" && key !== "_batmanID") {
           obj[key] = (value != null ? value.toJSON : void 0) ? value.toJSON() : value;
         }
       }
@@ -3037,6 +3135,10 @@
       });
     };
 
+    BatmanObject.accessor('_batmanID', function() {
+      return this._batmanID();
+    });
+
     return BatmanObject;
 
   })(Object);
@@ -3057,7 +3159,7 @@
 
     Renderer.prototype.deferEvery = 50;
 
-    function Renderer(node, callback, context, view) {
+    function Renderer(node, context, view) {
       this.node = node;
       this.context = context;
       this.view = view;
@@ -3066,9 +3168,6 @@
       this.start = __bind(this.start, this);
 
       Renderer.__super__.constructor.call(this);
-      if (callback != null) {
-        this.on('parsed', callback);
-      }
       if (!(this.context instanceof Batman.RenderContext)) {
         Batman.developer.error("Must pass a RenderContext to a renderer for rendering");
       }
@@ -3375,6 +3474,7 @@
         });
       }
       this.fire('die');
+      this.dead = true;
       return true;
     };
 
@@ -3852,7 +3952,7 @@
     };
 
     DeferredRenderingBinding.prototype.render = function() {
-      new Batman.Renderer(this.node, null, this.renderContext, this.renderer.view);
+      new Batman.Renderer(this.node, this.renderContext, this.renderer.view);
       return this.rendered = true;
     };
 
@@ -3956,8 +4056,7 @@
     };
 
     FormBinding.prototype.setupErrorsList = function() {
-      var _base;
-      if (this.errorsListNode = typeof (_base = this.get('node')).querySelector === "function" ? _base.querySelector(this.get('errorsListSelector')) : void 0) {
+      if (this.errorsListNode = Batman.DOM.querySelector(this.get('node'), this.get('errorsListSelector'))) {
         Batman.setInnerHTML(this.errorsListNode, this.errorsListHTML());
         if (!this.errorsListNode.getAttribute('data-showif')) {
           return this.errorsListNode.setAttribute('data-showif', "" + this.contextName + ".errors.length");
@@ -3966,7 +4065,7 @@
     };
 
     FormBinding.prototype.errorsListHTML = function() {
-      return "<ul>\n  <li data-foreach-error=\"" + this.contextName + ".errors\" data-bind=\"error.attribute | append ' ' | append error.message\"></li>\n</ul>";
+      return "<ul>\n  <li data-foreach-error=\"" + this.contextName + ".errors\" data-bind=\"error.fullMessage\"></li>\n</ul>";
     };
 
     return FormBinding;
@@ -4192,18 +4291,17 @@
     }
 
     AbstractCollectionBinding.prototype.bindCollection = function(newCollection) {
-      if (newCollection !== this.collection) {
+      var _ref;
+      if (newCollection instanceof Batman.Hash) {
+        newCollection = newCollection.meta;
+      }
+      if (newCollection === this.collection) {
+        return true;
+      } else {
         this.unbindCollection();
         this.collection = newCollection;
-        if (this.collection) {
-          if (this.collection.isObservable && this.collection.toArray) {
-            this.collection.observe('toArray', this.handleArrayChanged);
-          } else if (this.collection.isEventEmitter) {
-            this.collection.on('itemsWereAdded', this.handleItemsWereAdded);
-            this.collection.on('itemsWereRemoved', this.handleItemsWereRemoved);
-          } else {
-            return false;
-          }
+        if ((_ref = this.collection) != null ? _ref.isObservable : void 0) {
+          this.collection.observeAndFire('toArray', this.handleArrayChanged);
           return true;
         }
       }
@@ -4211,19 +4309,11 @@
     };
 
     AbstractCollectionBinding.prototype.unbindCollection = function() {
-      if (this.collection) {
-        if (this.collection.isObservable && this.collection.toArray) {
-          return this.collection.forget('toArray', this.handleArrayChanged);
-        } else if (this.collection.isEventEmitter) {
-          this.collection.event('itemsWereAdded').removeHandler(this.handleItemsWereAdded);
-          return this.collection.event('itemsWereRemoved').removeHandler(this.handleItemsWereRemoved);
-        }
+      var _ref;
+      if ((_ref = this.collection) != null ? _ref.isObservable : void 0) {
+        return this.collection.forget('toArray', this.handleArrayChanged);
       }
     };
-
-    AbstractCollectionBinding.prototype.handleItemsWereAdded = function() {};
-
-    AbstractCollectionBinding.prototype.handleItemsWereRemoved = function() {};
 
     AbstractCollectionBinding.prototype.handleArrayChanged = function() {};
 
@@ -4252,6 +4342,10 @@
 
       __extends(SingleStyleBinding, _super1);
 
+      SingleStyleBinding.prototype.isTwoWay = function() {
+        return false;
+      };
+
       function SingleStyleBinding() {
         var args, parent, _i;
         args = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), parent = arguments[_i++];
@@ -4270,23 +4364,21 @@
     function StyleBinding() {
       this.setStyle = __bind(this.setStyle, this);
 
-      this.handleItemsWereRemoved = __bind(this.handleItemsWereRemoved, this);
-
-      this.handleItemsWereAdded = __bind(this.handleItemsWereAdded, this);
+      this.handleArrayChanged = __bind(this.handleArrayChanged, this);
       this.oldStyles = {};
+      this.styleBindings = {};
       StyleBinding.__super__.constructor.apply(this, arguments);
     }
 
     StyleBinding.prototype.dataChange = function(value) {
-      var colonSplitCSSValues, cssName, key, keyValue, keypathValue, style, _i, _len, _ref, _ref1, _results,
-        _this = this;
+      var colonSplitCSSValues, cssName, key, style, _i, _len, _ref, _ref1, _results;
       if (!value) {
-        this.reapplyOldStyles();
+        this.resetStyles();
         return;
       }
       this.unbindCollection();
       if (typeof value === 'string') {
-        this.reapplyOldStyles();
+        this.resetStyles();
         _ref = value.split(';');
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           style = _ref[_i];
@@ -4296,50 +4388,47 @@
         return;
       }
       if (value instanceof Batman.Hash) {
-        if (this.bindCollection(value)) {
-          return value.forEach(function(key, value) {
-            return _this.setStyle(key, value);
-          });
+        return this.bindCollection(value);
+      } else {
+        if (value instanceof Batman.Object) {
+          value = value.toJSON();
         }
-      } else if (value instanceof Object) {
-        this.reapplyOldStyles();
+        this.resetStyles();
         _results = [];
         for (key in value) {
           if (!__hasProp.call(value, key)) continue;
-          keyValue = value[key];
-          if (keypathValue = this.renderContext.get(keyValue)) {
-            this.bindSingleAttribute(key, keyValue);
-            _results.push(this.setStyle(key, keypathValue));
-          } else {
-            _results.push(this.setStyle(key, keyValue));
-          }
+          _results.push(this.bindSingleAttribute(key, "" + this.keyPath + "." + key));
         }
         return _results;
       }
     };
 
-    StyleBinding.prototype.handleItemsWereAdded = function(newKey) {
-      this.setStyle(newKey, this.collection.get(newKey));
-    };
-
-    StyleBinding.prototype.handleItemsWereRemoved = function(oldKey) {
-      this.setStyle(oldKey, '');
+    StyleBinding.prototype.handleArrayChanged = function(array) {
+      var _this = this;
+      return this.collection.forEach(function(key, value) {
+        return _this.bindSingleAttribute(key, "" + _this.keyPath + "." + key);
+      });
     };
 
     StyleBinding.prototype.bindSingleAttribute = function(attr, keyPath) {
-      return new this.constructor.SingleStyleBinding(this.node, attr, keyPath, this.renderContext, this.renderer, this.only, this);
+      return this.styleBindings[attr] = new this.constructor.SingleStyleBinding(this.node, attr, keyPath, this.renderContext, this.renderer, this.only, this);
     };
 
     StyleBinding.prototype.setStyle = function(key, value) {
-      if (!key) {
-        return;
-      }
       key = Batman.helpers.camelize(key.trim(), true);
-      this.oldStyles[key] = this.node.style[key];
-      return this.node.style[key] = value ? value.trim() : "";
+      if (this.oldStyles[key] == null) {
+        this.oldStyles[key] = this.node.style[key] || "";
+      }
+      if (value != null ? value.trim : void 0) {
+        value = value.trim();
+      }
+      if (value == null) {
+        value = "";
+      }
+      return this.node.style[key] = value;
     };
 
-    StyleBinding.prototype.reapplyOldStyles = function() {
+    StyleBinding.prototype.resetStyles = function() {
       var cssName, cssValue, _ref, _results;
       _ref = this.oldStyles;
       _results = [];
@@ -4351,6 +4440,22 @@
       return _results;
     };
 
+    StyleBinding.prototype.resetBindings = function() {
+      var attribute, binding, _ref;
+      _ref = this.styleBindings;
+      for (attribute in _ref) {
+        binding = _ref[attribute];
+        binding._fireDataChange('');
+        binding.die();
+      }
+      return this.styleBindings = {};
+    };
+
+    StyleBinding.prototype.unbindCollection = function() {
+      this.resetBindings();
+      return StyleBinding.__super__.unbindCollection.apply(this, arguments);
+    };
+
     return StyleBinding;
 
   })(Batman.DOM.AbstractCollectionBinding);
@@ -4360,14 +4465,11 @@
 (function() {
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __slice = [].slice;
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   Batman.DOM.IteratorBinding = (function(_super) {
 
     __extends(IteratorBinding, _super);
-
-    IteratorBinding.prototype.deferEvery = 50;
 
     IteratorBinding.prototype.currentActionNumber = 0;
 
@@ -4384,308 +4486,111 @@
       this.parentRenderer = parentRenderer;
       this.handleArrayChanged = __bind(this.handleArrayChanged, this);
 
-      this.handleItemsWereRemoved = __bind(this.handleItemsWereRemoved, this);
-
-      this.handleItemsWereAdded = __bind(this.handleItemsWereAdded, this);
-
       this.nodeMap = new Batman.SimpleHash;
-      this.actionMap = new Batman.SimpleHash;
       this.rendererMap = new Batman.SimpleHash;
-      this.actions = [];
+      this.fragment = document.createDocumentFragment();
       this.prototypeNode = sourceNode.cloneNode(true);
       this.prototypeNode.removeAttribute("data-foreach-" + this.iteratorName);
-      this.pNode = sourceNode.parentNode;
       previousSiblingNode = sourceNode.nextSibling;
-      this.siblingNode = document.createComment("end " + this.iteratorName);
-      this.siblingNode[Batman.expando] = sourceNode[Batman.expando];
+      this.startNode = document.createComment("start " + this.iteratorName + "-" + (this.get('_batmanID')));
+      this.endNode = document.createComment("end " + this.iteratorName + "-" + (this.get('_batmanID')));
+      this.endNode[Batman.expando] = sourceNode[Batman.expando];
       if (Batman.canDeleteExpando) {
         delete sourceNode[Batman.expando];
       }
-      Batman.insertBefore(sourceNode.parentNode, this.siblingNode, previousSiblingNode);
-      this.parentRenderer.on('parsed', function() {
-        Batman.destroyNode(sourceNode);
-        return _this.bind();
-      });
+      Batman.insertBefore(sourceNode.parentNode, this.startNode, previousSiblingNode);
+      Batman.insertBefore(sourceNode.parentNode, this.endNode, previousSiblingNode);
       this.parentRenderer.prevent('rendered');
-      IteratorBinding.__super__.constructor.call(this, this.siblingNode, this.iteratorName, this.key, this.context, this.parentRenderer);
-      this.fragment = document.createDocumentFragment();
+      Batman.DOM.onParseExit(sourceNode.parentNode, function() {
+        Batman.destroyNode(sourceNode);
+        _this.bind();
+        return _this.parentRenderer.allowAndFire('rendered');
+      });
+      IteratorBinding.__super__.constructor.call(this, this.endNode, this.iteratorName, this.key, this.context, this.parentRenderer);
     }
 
     IteratorBinding.prototype.parentNode = function() {
-      return this.siblingNode.parentNode;
+      return this.endNode.parentNode;
     };
 
     IteratorBinding.prototype.die = function() {
-      IteratorBinding.__super__.die.apply(this, arguments);
-      return this.dead = true;
+      this.dead = true;
+      return IteratorBinding.__super__.die.apply(this, arguments);
     };
 
-    IteratorBinding.prototype.unbindCollection = function() {
-      var _this = this;
-      if (this.collection) {
-        this.nodeMap.forEach(function(item) {
-          return _this.cancelExistingItem(item);
-        });
-        return IteratorBinding.__super__.unbindCollection.apply(this, arguments);
+    IteratorBinding.prototype.dataChange = function(collection) {
+      var items, _items;
+      if (collection != null) {
+        if (!this.bindCollection(collection)) {
+          items = (collection != null ? collection.forEach : void 0) ? (_items = [], collection.forEach(function(item) {
+            return _items.push(item);
+          }), _items) : Object.keys(collection);
+          return this.handleArrayChanged(items);
+        }
+      } else {
+        return this.handleArrayChanged([]);
       }
     };
 
-    IteratorBinding.prototype.dataChange = function(newCollection) {
-      var key, value, _ref,
+    IteratorBinding.prototype.handleArrayChanged = function(newItems) {
+      var existingNode, index, newItem, node, nodeAtIndex, parentNode, startIndex, unseenNodeMap, _i, _len,
         _this = this;
-      if (this.collection !== newCollection) {
-        this.removeAll();
-      }
-      this.bindCollection(newCollection);
-      if (this.collection) {
-        if (this.collection.toArray) {
-          this.handleArrayChanged();
-        } else if (this.collection.forEach) {
-          this.collection.forEach(function(item) {
-            return _this.addOrInsertItem(item);
-          });
+      parentNode = this.parentNode();
+      startIndex = this._getStartNodeIndex() + 1;
+      unseenNodeMap = this.nodeMap.merge();
+      for (index = _i = 0, _len = newItems.length; _i < _len; index = ++_i) {
+        newItem = newItems[index];
+        nodeAtIndex = parentNode.childNodes[startIndex + index];
+        if ((nodeAtIndex != null) && this._itemForNode(nodeAtIndex) === newItem) {
+          unseenNodeMap.unset(newItem);
+          continue;
         } else {
-          _ref = this.collection;
-          for (key in _ref) {
-            if (!__hasProp.call(_ref, key)) continue;
-            value = _ref[key];
-            this.addOrInsertItem(key);
-          }
+          node = (existingNode = this.nodeMap.get(newItem)) ? (unseenNodeMap.unset(newItem), existingNode) : this._newNodeForItem(newItem);
+          Batman.insertBefore(this.parentNode(), node, nodeAtIndex);
         }
       }
-      Batman.developer["do"](function() {
-        return _this._warningTimeout || (_this._warningTimeout = setTimeout(function() {
-          if (_this.collection == null) {
-            return Batman.developer.warn("Warning! data-foreach-" + _this.iteratorName + " called with an undefined binding. Key was: " + _this.key + ".");
-          }
-        }, 1000));
+      unseenNodeMap.forEach(function(item, node) {
+        return _this._removeItem(item);
       });
-      return this.processActionQueue();
     };
 
-    IteratorBinding.prototype.handleItemsWereAdded = function() {
-      var item, items, _i, _len;
-      items = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      for (_i = 0, _len = items.length; _i < _len; _i++) {
-        item = items[_i];
-        this.addOrInsertItem(item, {
-          fragment: false
-        });
-      }
+    IteratorBinding.prototype._itemForNode = function(node) {
+      return Batman._data(node, "" + this.iteratorName + "Item");
     };
 
-    IteratorBinding.prototype.handleItemsWereRemoved = function() {
-      var item, items, _i, _len;
-      items = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      for (_i = 0, _len = items.length; _i < _len; _i++) {
-        item = items[_i];
-        this.removeItem(item);
-      }
-    };
-
-    IteratorBinding.prototype.handleArrayChanged = function() {
-      var item, newItemsInOrder, nodesToRemove, _i, _len,
+    IteratorBinding.prototype._newNodeForItem = function(newItem) {
+      var newNode, renderer,
         _this = this;
-      newItemsInOrder = this.collection.toArray();
-      nodesToRemove = (new Batman.SimpleHash).merge(this.nodeMap);
-      for (_i = 0, _len = newItemsInOrder.length; _i < _len; _i++) {
-        item = newItemsInOrder[_i];
-        this.addOrInsertItem(item, {
-          fragment: false
-        });
-        nodesToRemove.unset(item);
-      }
-      return nodesToRemove.forEach(function(item, node) {
-        return _this.removeItem(item);
-      });
-    };
-
-    IteratorBinding.prototype.addOrInsertItem = function(item, options) {
-      var existingNode;
-      if (options == null) {
-        options = {};
-      }
-      existingNode = this.nodeMap.get(item);
-      if (existingNode) {
-        return this.insertItem(item, existingNode);
-      } else {
-        return this.addItem(item, options);
-      }
-    };
-
-    IteratorBinding.prototype.addItem = function(item, options) {
-      var childRenderer, finish, self,
-        _this = this;
-      if (options == null) {
-        options = {
-          fragment: true
-        };
-      }
-      this.parentRenderer.prevent('rendered');
-      if (this.actionMap.get(item) != null) {
-        this.cancelExistingItemActions(item);
-      }
-      self = this;
-      options.actionNumber = this.queuedActionNumber++;
-      childRenderer = new Batman.Renderer(this._nodeForItem(item), (function() {
-        self.rendererMap.unset(item);
-        return self.insertItem(item, this.node, options);
-      }), this.renderContext.descend(item, this.iteratorName), this.parentRenderer.view);
-      this.rendererMap.set(item, childRenderer);
-      finish = function() {
-        if (_this.dead) {
-          return;
-        }
-        return _this.parentRenderer.allowAndFire('rendered');
-      };
-      childRenderer.on('rendered', finish);
-      childRenderer.on('stopped', function() {
-        if (_this.dead) {
-          return;
-        }
-        _this.actions[options.actionNumber] = false;
-        finish();
-        return _this.processActionQueue();
-      });
-      return item;
-    };
-
-    IteratorBinding.prototype.removeItem = function(item) {
-      var oldNode;
-      if (this.dead || !(item != null)) {
-        return;
-      }
-      oldNode = this.nodeMap.unset(item);
-      this.cancelExistingItem(item);
-      if (oldNode) {
-        Batman.destroyNode(oldNode);
-        if (oldNode) {
-          return this.fire('nodeRemoved', oldNode, item);
-        }
-      }
-    };
-
-    IteratorBinding.prototype.removeAll = function() {
-      var _this = this;
-      return this.nodeMap.forEach(function(item) {
-        return _this.removeItem(item);
-      });
-    };
-
-    IteratorBinding.prototype.insertItem = function(item, node, options) {
-      var existingActionNumber;
-      if (options == null) {
-        options = {};
-      }
-      if (this.dead) {
-        return;
-      }
-      if (!(options.actionNumber != null)) {
-        options.actionNumber = this.queuedActionNumber++;
-      }
-      existingActionNumber = this.actionMap.get(item);
-      if (existingActionNumber > options.actionNumber) {
-        this.actions[options.actionNumber] = function() {};
-      } else {
-        if (existingActionNumber) {
-          this.cancelExistingItemActions(item);
-        }
-        this.actionMap.set(item, options.actionNumber);
-        this.actions[options.actionNumber] = function() {
-          var addItem, _ref;
-          if (options.fragment) {
-            this.fragment.appendChild(node);
-          } else {
-            if (options.fragment) {
-              this.fragment.appendChild(node);
-            } else {
-              Batman.insertBefore(this.parentNode(), node, this.siblingNode);
-              Batman.propagateBindingEvents(node);
-            }
-          }
-          if (addItem = node.getAttribute('data-additem')) {
-            if ((_ref = this.renderer.context.contextForKey(addItem)) != null) {
-              if (typeof _ref[addItem] === "function") {
-                _ref[addItem](item, node);
-              }
-            }
-          }
-          return this.fire('nodeAdded', node, item);
-        };
-        this.actions[options.actionNumber].item = item;
-      }
-      return this.processActionQueue();
-    };
-
-    IteratorBinding.prototype.cancelExistingItem = function(item) {
-      this.cancelExistingItemActions(item);
-      return this.cancelExistingItemRender(item);
-    };
-
-    IteratorBinding.prototype.cancelExistingItemActions = function(item) {
-      var oldActionNumber;
-      oldActionNumber = this.actionMap.get(item);
-      if ((oldActionNumber != null) && oldActionNumber >= this.currentActionNumber) {
-        this.actions[oldActionNumber] = false;
-      }
-      return this.actionMap.unset(item);
-    };
-
-    IteratorBinding.prototype.cancelExistingItemRender = function(item) {
-      var oldRenderer;
-      oldRenderer = this.rendererMap.get(item);
-      if (oldRenderer) {
-        oldRenderer.stop();
-        Batman.destroyNode(oldRenderer.node);
-      }
-      return this.rendererMap.unset(item);
-    };
-
-    IteratorBinding.prototype.processActionQueue = function() {
-      var _this = this;
-      if (this.dead) {
-        return;
-      }
-      if (!this.actionQueueTimeout) {
-        return this.actionQueueTimeout = Batman.setImmediate(function() {
-          var addedNodes, f, node, startTime, _i, _len;
-          if (_this.dead) {
-            return;
-          }
-          delete _this.actionQueueTimeout;
-          startTime = new Date;
-          while ((f = _this.actions[_this.currentActionNumber]) != null) {
-            delete _this.actions[_this.currentActionNumber];
-            _this.actionMap.unset(f.item);
-            if (f) {
-              f.call(_this);
-            }
-            _this.currentActionNumber++;
-            if (_this.deferEvery && (new Date - startTime) > _this.deferEvery) {
-              return _this.processActionQueue();
-            }
-          }
-          if (_this.fragment && _this.rendererMap.length === 0 && _this.fragment.hasChildNodes()) {
-            addedNodes = Array.prototype.slice.call(_this.fragment.childNodes);
-            Batman.insertBefore(_this.parentNode(), _this.fragment, _this.siblingNode);
-            for (_i = 0, _len = addedNodes.length; _i < _len; _i++) {
-              node = addedNodes[_i];
-              Batman.propagateBindingEvents(node);
-            }
-            _this.fragment = document.createDocumentFragment();
-          }
-          if (_this.currentActionNumber === _this.queuedActionNumber) {
-            return _this.parentRenderer.allowAndFire('rendered');
-          }
-        });
-      }
-    };
-
-    IteratorBinding.prototype._nodeForItem = function(item) {
-      var newNode;
       newNode = this.prototypeNode.cloneNode(true);
-      this.nodeMap.set(item, newNode);
+      Batman._data(newNode, "" + this.iteratorName + "Item", newItem);
+      this.nodeMap.set(newItem, newNode);
+      this.parentRenderer.prevent('rendered');
+      renderer = new Batman.Renderer(newNode, this.renderContext.descend(newItem, this.iteratorName), this.parentRenderer.view);
+      renderer.on('rendered', function() {
+        Batman.propagateBindingEvents(newNode);
+        _this.fire('nodeAdded', newNode, newItem);
+        return _this.parentRenderer.allowAndFire('rendered');
+      });
       return newNode;
+    };
+
+    IteratorBinding.prototype._getStartNodeIndex = function() {
+      var index, node, _i, _len, _ref;
+      _ref = this.parentNode().childNodes;
+      for (index = _i = 0, _len = _ref.length; _i < _len; index = ++_i) {
+        node = _ref[index];
+        if (node === this.startNode) {
+          return index;
+        }
+      }
+      return 0;
+    };
+
+    IteratorBinding.prototype._removeItem = function(item) {
+      var node;
+      node = this.nodeMap.unset(item);
+      Batman.destroyNode(node);
+      return this.fire('nodeRemoved', node, item);
     };
 
     return IteratorBinding;
@@ -4704,10 +4609,6 @@
     __extends(ClassBinding, _super);
 
     function ClassBinding() {
-      this.handleItemsWereAdded = __bind(this.handleItemsWereAdded, this);
-
-      this.handleItemsWereRemoved = __bind(this.handleItemsWereRemoved, this);
-
       this.handleArrayChanged = __bind(this.handleArrayChanged, this);
       return ClassBinding.__super__.constructor.apply(this, arguments);
     }
@@ -4751,14 +4652,6 @@
       return this.updateFromCollection();
     };
 
-    ClassBinding.prototype.handleItemsWereRemoved = function() {
-      return this.updateFromCollection();
-    };
-
-    ClassBinding.prototype.handleItemsWereAdded = function() {
-      return this.updateFromCollection();
-    };
-
     return ClassBinding;
 
   })(Batman.DOM.AbstractCollectionBinding);
@@ -4772,6 +4665,13 @@
   Batman.ValidationError = (function(_super) {
 
     __extends(ValidationError, _super);
+
+    ValidationError.accessor('fullMessage', function() {
+      return Batman.t('errors.format', {
+        attribute: Batman.helpers.humanize(this.attribute),
+        message: this.message
+      });
+    });
 
     function ValidationError(attribute, message) {
       ValidationError.__super__.constructor.call(this, {
@@ -5146,6 +5046,7 @@
     RestStorage.prototype.request = function(env, next) {
       var options;
       options = Batman.extend(env.options, {
+        autosend: false,
         success: function(data) {
           return env.data = data;
         },
@@ -5157,7 +5058,8 @@
           return next();
         }
       });
-      return env.request = new Batman.Request(options);
+      env.request = new Batman.Request(options);
+      return env.request.send();
     };
 
     RestStorage.prototype.perform = function(key, record, options, callback) {
@@ -5167,10 +5069,12 @@
     };
 
     RestStorage.prototype.before('all', RestStorage.skipIfError(function(env, next) {
-      try {
-        env.options.url = env.subject.prototype ? this.urlForCollection(env.subject, env) : this.urlForRecord(env.subject, env);
-      } catch (error) {
-        env.error = error;
+      if (!env.options.url) {
+        try {
+          env.options.url = env.subject.prototype ? this.urlForCollection(env.subject, env) : this.urlForRecord(env.subject, env);
+        } catch (error) {
+          env.error = error;
+        }
       }
       return next();
     }));
@@ -5189,13 +5093,19 @@
       } else {
         data = json;
       }
+      env.options.data = data;
+      return next();
+    }));
+
+    RestStorage.prototype.before('create', 'update', 'put', 'post', RestStorage.skipIfError(function(env, next) {
       if (this.serializeAsForm) {
         env.options.contentType = this.constructor.PostBodyContentType;
       } else {
-        data = JSON.stringify(data);
-        env.options.contentType = this.constructor.JSONContentType;
+        if (env.options.data != null) {
+          env.options.data = JSON.stringify(env.options.data);
+          env.options.contentType = this.constructor.JSONContentType;
+        }
       }
-      env.options.data = data;
       return next();
     }));
 
@@ -5213,10 +5123,12 @@
             return next();
           }
         }
-      } else {
+      } else if (typeof env.data === 'object') {
         json = env.data;
       }
-      env.json = json;
+      if (json != null) {
+        env.json = json;
+      }
       return next();
     }));
 
@@ -5263,9 +5175,11 @@
 
     RestStorage.prototype.after('get', 'put', 'post', 'delete', RestStorage.skipIfError(function(env, next) {
       var json, namespace;
-      json = env.json;
-      namespace = env.subject.prototype ? this.collectionJsonNamespace(env.subject) : this.recordJsonNamespace(env.subject);
-      env.result = namespace && (env.json[namespace] != null) ? env.json[namespace] : env.json;
+      if (env.json != null) {
+        json = env.json;
+        namespace = env.subject.prototype ? this.collectionJsonNamespace(env.subject) : this.recordJsonNamespace(env.subject);
+        env.result = namespace && (env.json[namespace] != null) ? env.json[namespace] : env.json;
+      }
       return next();
     }));
 
@@ -6190,6 +6104,10 @@
           from: ['dirty', 'clean'],
           to: 'destroying'
         },
+        failedValidation: {
+          from: ['saving', 'creating'],
+          to: 'dirty'
+        },
         loaded: {
           loading: 'clean'
         },
@@ -6245,6 +6163,10 @@
 
     Model.accessor('dirtyKeys', function() {
       return this.dirtyKeys || (this.dirtyKeys = new Batman.Hash);
+    });
+
+    Model.accessor('_dirtiedKeys', function() {
+      return this._dirtiedKeys || (this._dirtiedKeys = new Batman.SimpleSet);
     });
 
     Model.accessor('errors', function() {
@@ -6434,8 +6356,9 @@
       return this.validate(function(error, errors) {
         var associations, creating;
         if (error || errors.length) {
+          _this.get('lifecycle').failedValidation();
           if (typeof callback === "function") {
-            callback(error || errors);
+            callback(error || errors, _this);
           }
           return;
         }
@@ -6454,6 +6377,7 @@
           }, function(err, record, env) {
             if (!err) {
               _this.get('dirtyKeys').clear();
+              _this.get('_dirtiedKeys').clear();
               if (associations) {
                 record._withoutDirtyTracking(function() {
                   var _ref4, _ref5;
@@ -6470,9 +6394,13 @@
               record = _this.constructor._mapIdentity(record);
               _this.get('lifecycle').startTransition(endState);
             } else {
-              _this.get('lifecycle').error();
+              if (err instanceof Batman.ErrorsSet) {
+                _this.get('lifecycle').failedValidation();
+              } else {
+                _this.get('lifecycle').error();
+              }
             }
-            return typeof callback === "function" ? callback(err, record, env) : void 0;
+            return typeof callback === "function" ? callback(err, record || _this, env) : void 0;
           });
         } else {
           return typeof callback === "function" ? callback(new Batman.StateMachine.InvalidTransitionError("Can't save while in state " + (_this.get('lifecycle.state')))) : void 0;
@@ -6514,7 +6442,9 @@
         }
         return true;
       }
-      count = validators.length;
+      count = validators.reduce((function(acc, validator) {
+        return acc + validator.keys.length;
+      }), 0);
       finishedValidation = function() {
         if (--count === 0) {
           return typeof callback === "function" ? callback(void 0, errors) : void 0;
@@ -6550,14 +6480,14 @@
     };
 
     Model.prototype._willSet = function(key) {
-      var _this = this;
       if (this._pauseDirtyTracking) {
         return true;
       }
       if (this.get('lifecycle').startTransition('set')) {
-        this.getOrSet("dirtyKeys." + key, function() {
-          return _this.get(key);
-        });
+        if (!this.get('_dirtiedKeys').has(key)) {
+          this.set("dirtyKeys." + key, this.get(key));
+          this.get('_dirtiedKeys').add(key);
+        }
         return true;
       } else {
         return false;
@@ -6745,11 +6675,11 @@
       return this.path();
     });
 
-    NamedRouteQuery.accessor('routeMap', 'args', 'cardinality', Batman.Property.defaultAccessor);
+    NamedRouteQuery.accessor('routeMap', 'args', 'cardinality', 'hashValue', Batman.Property.defaultAccessor);
 
     NamedRouteQuery.accessor({
       get: function(key) {
-        if (!(key != null)) {
+        if (key == null) {
           return;
         }
         if (typeof key === 'string') {
@@ -6758,9 +6688,22 @@
           return this.nextQueryWithArgument(key);
         }
       },
-      set: function() {},
       cache: false
     });
+
+    NamedRouteQuery.accessor('withHash', function() {
+      var _this = this;
+      return new Batman.Accessible(function(hashValue) {
+        return _this.withHash(hashValue);
+      });
+    });
+
+    NamedRouteQuery.prototype.withHash = function(hashValue) {
+      var clone;
+      clone = this.clone();
+      clone.set('hashValue', hashValue);
+      return clone;
+    };
 
     NamedRouteQuery.prototype.nextQueryForName = function(key) {
       var map;
@@ -6787,6 +6730,9 @@
         if ((argumentValue = this.get('args')[index]) != null) {
           params[argumentName] = this._toParam(argumentValue);
         }
+      }
+      if (this.get('hashValue') != null) {
+        params['#'] = this.get('hashValue');
       }
       return this.get('route').pathFromParams(params);
     };
@@ -6918,24 +6864,25 @@
     };
 
     Dispatcher.prototype.dispatch = function(params) {
-      var inferredParams, path, route;
+      var inferredParams, path, route, _ref;
       inferredParams = this.constructor.paramsFromArgument(params);
       route = this.routeForParams(inferredParams);
       if (route) {
-        path = route.dispatch(inferredParams);
+        _ref = route.pathAndParamsFromArgument(inferredParams), path = _ref[0], params = _ref[1];
+        this.set('app.currentRoute', route);
+        this.set('app.currentURL', path);
+        this.get('app.currentParams').replace(params || {});
+        route.dispatch(params);
       } else {
         if (Batman.typeOf(params) === 'Object' && !this.constructor.canInferRoute(params)) {
           return this.get('app.currentParams').replace(params);
         } else {
           this.get('app.currentParams').clear();
         }
-        if (!(path === '/404' || params === '/404')) {
+        if (params !== '/404') {
           return Batman.redirect('/404');
         }
       }
-      this.set('app.currentURL', path);
-      this.set('app.currentRoute', route);
-      this.get('app.currentParams').replace((route != null ? route.paramsFromPath(path) : void 0) || {});
       return path;
     };
 
@@ -7013,11 +6960,11 @@
         name = namedArguments[index];
         params[name] = match;
       }
-      return Batman.extend(params, uri.queryParams());
+      return Batman.extend(params, uri.queryParams);
     };
 
     Route.prototype.pathFromParams = function(argumentParams) {
-      var key, name, newPath, params, path, query, regexp, _i, _j, _len, _len1, _ref, _ref1;
+      var hash, key, name, newPath, params, path, query, regexp, _i, _j, _len, _len1, _ref, _ref1;
       params = Batman.extend({}, argumentParams);
       path = this.get('templatePath');
       _ref = this.get('namedArguments');
@@ -7035,9 +6982,16 @@
         key = _ref1[_j];
         delete params[key];
       }
+      if (params['#']) {
+        hash = params['#'];
+        delete params['#'];
+      }
       query = Batman.URI.queryFromParams(params);
       if (query) {
         path += "?" + query;
+      }
+      if (hash) {
+        path += "#" + hash;
       }
       return path;
     };
@@ -7063,11 +7017,8 @@
       return this.get('regexp').test(path);
     };
 
-    Route.prototype.dispatch = function(pathOrParams) {
+    Route.prototype.pathAndParamsFromArgument = function(pathOrParams) {
       var params, path;
-      if (!this.test(pathOrParams)) {
-        return false;
-      }
       if (typeof pathOrParams === 'string') {
         params = this.paramsFromPath(pathOrParams);
         path = pathOrParams;
@@ -7075,8 +7026,14 @@
         params = pathOrParams;
         path = this.pathFromParams(pathOrParams);
       }
-      this.get('callback')(params);
-      return path;
+      return [path, params];
+    };
+
+    Route.prototype.dispatch = function(params) {
+      if (!this.test(params)) {
+        return false;
+      }
+      return this.get('callback')(params);
     };
 
     Route.prototype.callback = function() {
@@ -7165,6 +7122,8 @@
 
       __extends(Metadata, _super1);
 
+      Batman.extend(Metadata.prototype, Batman.Enumerable);
+
       function Metadata(hash) {
         this.hash = hash;
       }
@@ -7174,13 +7133,15 @@
         return this.hash.length;
       });
 
-      Metadata.accessor('isEmpty', function() {
-        return this.hash.isEmpty();
+      Metadata.accessor('isEmpty', 'keys', 'toArray', function(key) {
+        this.hash.registerAsMutableSource();
+        return this.hash[key]();
       });
 
-      Metadata.accessor('keys', function() {
-        return this.hash.keys();
-      });
+      Metadata.prototype.forEach = function() {
+        var _ref;
+        return (_ref = this.hash).forEach.apply(_ref, arguments);
+      };
 
       return Metadata;
 
@@ -7294,7 +7255,7 @@
       Hash.prototype[k] = Batman.SimpleHash.prototype[k];
     }
 
-    _ref1 = ['hasKey', 'forEach', 'isEmpty', 'keys', 'merge', 'toJSON', 'toObject'];
+    _ref1 = ['hasKey', 'forEach', 'isEmpty', 'keys', 'toArray', 'merge', 'toJSON', 'toObject'];
     _fn = function(k) {
       return Hash.prototype[k] = function() {
         this.registerAsMutableSource();
@@ -7329,6 +7290,9 @@
 
     RenderCache.prototype.viewForOptions = function(options) {
       var _this = this;
+      if (options.cache === false || options.viewClass.prototype.cache === false) {
+        return this._newViewFromOptions(options);
+      }
       return this.getOrSet(options, function() {
         return _this._newViewFromOptions(Batman.extend({}, options));
       });
@@ -7380,6 +7344,17 @@
         }
       }
       return true;
+    };
+
+    RenderCache.prototype.reset = function() {
+      var key, _i, _len, _ref, _results;
+      _ref = this.keyQueue.slice(0);
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        key = _ref[_i];
+        _results.push(this.unset(key));
+      }
+      return _results;
     };
 
     RenderCache.prototype._addOrBubbleKey = function(key) {
@@ -7489,15 +7464,23 @@
       return filters.set(options.block, options);
     };
 
+    Controller.afterFilter(function(params) {
+      if (this.autoScrollToHash && (params['#'] != null)) {
+        return this.scrollToHash(params['#']);
+      }
+    });
+
     function Controller() {
       this.redirect = __bind(this.redirect, this);
-      this._actionFrames = [];
       Controller.__super__.constructor.apply(this, arguments);
+      this._resetActionFrames();
     }
 
     Controller.prototype.renderCache = new Batman.RenderCache;
 
     Controller.prototype.defaultRenderYield = 'main';
+
+    Controller.prototype.autoScrollToHash = true;
 
     Controller.prototype.dispatch = function(action, params) {
       var redirectTo;
@@ -7507,7 +7490,7 @@
       params.controller || (params.controller = this.get('routingKey'));
       params.action || (params.action = action);
       params.target || (params.target = this);
-      this._actionFrames = [];
+      this._resetActionFrames();
       this.set('action', action);
       this.set('params', params);
       Batman.DOM.Yield.cycleAll();
@@ -7521,14 +7504,25 @@
     };
 
     Controller.prototype.executeAction = function(action, params) {
-      var frame, oldRedirect, result, _ref, _ref1, _ref2;
+      var frame, oldRedirect, parentFrame, result, _ref, _ref1,
+        _this = this;
       if (params == null) {
         params = this.get('params');
       }
       Batman.developer.assert(this[action], "Error! Controller action " + (this.get('routingKey')) + "." + action + " couldn't be found!");
-      this._actionFrames.push(frame = {
-        actionTaken: false,
+      parentFrame = this._actionFrames[this._actionFrames.length - 1];
+      frame = new Batman.ControllerActionFrame({
+        parentFrame: parentFrame,
         action: action
+      }, function() {
+        var _ref;
+        _this._runFilters(action, params, 'afterFilters');
+        _this._resetActionFrames();
+        return (_ref = Batman.navigator) != null ? _ref.redirect = oldRedirect : void 0;
+      });
+      this._actionFrames.push(frame);
+      frame.startOperation({
+        internal: true
       });
       oldRedirect = (_ref = Batman.navigator) != null ? _ref.redirect : void 0;
       if ((_ref1 = Batman.navigator) != null) {
@@ -7536,14 +7530,10 @@
       }
       this._runFilters(action, params, 'beforeFilters');
       result = this[action](params);
-      if (!frame.actionTaken) {
+      if (!frame.operationOccurred) {
         this.render();
       }
-      this._runFilters(action, params, 'afterFilters');
-      if ((_ref2 = Batman.navigator) != null) {
-        _ref2.redirect = oldRedirect;
-      }
-      this._actionFrames.pop();
+      frame.finishOperation();
       return result;
     };
 
@@ -7551,11 +7541,11 @@
       var frame;
       frame = this._actionFrames[this._actionFrames.length - 1];
       if (frame) {
-        if (frame.actionTaken) {
-          Batman.developer.warn("Warning! Trying to redirect but an action has already be taken during " + (this.get('routingKey')) + "." + (frame.action || this.get('action')) + "}");
+        if (frame.operationOccurred) {
+          Batman.developer.warn("Warning! Trying to redirect but an action has already be taken during " + (this.get('routingKey')) + "." + (frame.action || this.get('action')));
         }
-        frame.actionTaken = true;
-        if (this._afterFilterRedirect) {
+        frame.startAndFinishOperation();
+        if (this._afterFilterRedirect != null) {
           return Batman.developer.warn("Warning! Multiple actions trying to redirect!");
         } else {
           return this._afterFilterRedirect = url;
@@ -7571,24 +7561,24 @@
     };
 
     Controller.prototype.render = function(options) {
-      var action, frame, view, _ref, _ref1, _ref2,
+      var action, frame, view, _ref, _ref1,
         _this = this;
       if (options == null) {
         options = {};
       }
-      frame = (_ref = this._actionFrames) != null ? _ref[this._actionFrames.length - 1] : void 0;
+      if (frame = (_ref = this._actionFrames) != null ? _ref[this._actionFrames.length - 1] : void 0) {
+        frame.startOperation();
+      }
+      if (options === false) {
+        frame.finishOperation();
+        return;
+      }
       action = (frame != null ? frame.action : void 0) || this.get('action');
       if (options) {
         options.into || (options.into = this.defaultRenderYield);
       }
-      if (frame != null) {
-        frame.actionTaken = true;
-      }
-      if (options === false) {
-        return;
-      }
       if (!options.view) {
-        options.viewClass || (options.viewClass = ((_ref1 = Batman.currentApp) != null ? _ref1[Batman.helpers.camelize("" + (this.get('routingKey')) + "_" + action + "_view")] : void 0) || Batman.View);
+        options.viewClass || (options.viewClass = this._viewClassForAction(action));
         options.context || (options.context = this.get('_renderContext'));
         options.source || (options.source = Batman.helpers.underscore(this.get('routingKey') + '/' + action));
         view = this.renderCache.viewForOptions(options);
@@ -7597,16 +7587,36 @@
         options.view = null;
       }
       if (view) {
-        if ((_ref2 = Batman.currentApp) != null) {
-          _ref2.prevent('ready');
+        if ((_ref1 = Batman.currentApp) != null) {
+          _ref1.prevent('ready');
         }
         view.on('ready', function() {
-          var _ref3;
+          var _ref2;
           Batman.DOM.Yield.withName(options.into).replace(view.get('node'));
-          return (_ref3 = Batman.currentApp) != null ? _ref3.allowAndFire('ready') : void 0;
+          if ((_ref2 = Batman.currentApp) != null) {
+            _ref2.allowAndFire('ready');
+          }
+          return frame != null ? frame.finishOperation() : void 0;
         });
       }
       return view;
+    };
+
+    Controller.prototype.scrollToHash = function(hash) {
+      if (hash == null) {
+        hash = this.get('params')['#'];
+      }
+      return Batman.DOM.scrollIntoView(hash);
+    };
+
+    Controller.prototype._resetActionFrames = function() {
+      return this._actionFrames = [];
+    };
+
+    Controller.prototype._viewClassForAction = function(action) {
+      var classPrefix, _ref;
+      classPrefix = this.get('routingKey').replace('/', '_');
+      return ((_ref = Batman.currentApp) != null ? _ref[Batman.helpers.camelize("" + classPrefix + "_" + action + "_view")] : void 0) || Batman.View;
     };
 
     Controller.prototype._runFilters = function(action, params, filters) {
@@ -7707,7 +7717,7 @@
 
     Set._applySetAccessors(Set);
 
-    _ref = ['add', 'remove', 'clear', 'replace', 'indexedBy', 'indexedByUnique', 'sortedBy'];
+    _ref = ['add', 'remove', 'clear', 'replace', 'indexedBy', 'indexedByUnique', 'sortedBy', 'equality', '_indexOfItem'];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       k = _ref[_i];
       Set.prototype[k] = Batman.SimpleSet.prototype[k];
@@ -7977,6 +7987,93 @@
     };
 
     return SetIntersection;
+
+  })(Batman.BinarySetOperation);
+
+}).call(this);
+
+(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __slice = [].slice;
+
+  Batman.SetComplement = (function(_super) {
+
+    __extends(SetComplement, _super);
+
+    function SetComplement() {
+      return SetComplement.__super__.constructor.apply(this, arguments);
+    }
+
+    SetComplement.prototype._itemsWereAddedToSource = function() {
+      var item, items, itemsToAdd, itemsToRemove, opposite, source;
+      source = arguments[0], opposite = arguments[1], items = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
+      if (source === this.left) {
+        itemsToAdd = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = items.length; _i < _len; _i++) {
+            item = items[_i];
+            if (!opposite.has(item)) {
+              _results.push(item);
+            }
+          }
+          return _results;
+        })();
+        return this.add.apply(this, itemsToAdd);
+      } else {
+        itemsToRemove = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = items.length; _i < _len; _i++) {
+            item = items[_i];
+            if (opposite.has(item)) {
+              _results.push(item);
+            }
+          }
+          return _results;
+        })();
+        return this.remove.apply(this, itemsToRemove);
+      }
+    };
+
+    SetComplement.prototype._itemsWereRemovedFromSource = function() {
+      var item, items, itemsToAdd, opposite, source;
+      source = arguments[0], opposite = arguments[1], items = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
+      if (source === this.left) {
+        return this.remove.apply(this, items);
+      } else {
+        itemsToAdd = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = items.length; _i < _len; _i++) {
+            item = items[_i];
+            if (opposite.has(item)) {
+              _results.push(item);
+            }
+          }
+          return _results;
+        })();
+        return this.add.apply(this, itemsToAdd);
+      }
+    };
+
+    SetComplement.prototype._addComplement = function(items, opposite) {
+      var item;
+      return this.add.apply(this, (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = items.length; _i < _len; _i++) {
+          item = items[_i];
+          if (opposite.has(item)) {
+            _results.push(item);
+          }
+        }
+        return _results;
+      })());
+    };
+
+    return SetComplement;
 
   })(Batman.BinarySetOperation);
 
@@ -8290,9 +8387,8 @@
       }
       return this.association.getRelatedModel().load(this._getLoadOptions(), function(err, records) {
         if (!err) {
-          _this.loaded = true;
+          _this.markAsLoaded();
         }
-        _this.fire('loaded');
         return callback(err, _this);
       });
     };
@@ -8302,6 +8398,13 @@
       loadOptions = {};
       loadOptions[this.association.foreignKey] = this.foreignKeyValue;
       return loadOptions;
+    };
+
+    AssociationSet.accessor('loaded', Batman.Property.defaultAccessor);
+
+    AssociationSet.prototype.markAsLoaded = function() {
+      this.set('loaded', true);
+      return this.fire('loaded');
     };
 
     return AssociationSet;
@@ -8622,10 +8725,51 @@
       while (i--) {
         this[attributes[i]] = matches[i] || '';
       }
+      this.queryParams = this.constructor.paramsFromQuery(this.query);
+      delete this.authority;
+      delete this.userInfo;
+      delete this.relative;
+      delete this.directory;
+      delete this.file;
+      delete this.query;
     }
 
-    URI.prototype.queryParams = function() {
-      return this.constructor.paramsFromQuery(this.query);
+    URI.prototype.queryString = function() {
+      return this.constructor.queryFromParams(this.queryParams);
+    };
+
+    URI.prototype.toString = function() {
+      return [this.protocol ? "" + this.protocol + ":" : void 0, this.authority() ? "//" : void 0, this.authority(), this.relative()].join("");
+    };
+
+    URI.prototype.userInfo = function() {
+      return [this.user, this.password ? ":" + this.password : void 0].join("");
+    };
+
+    URI.prototype.authority = function() {
+      return [this.userInfo(), this.user || this.password ? "@" : void 0, this.hostname, this.port ? ":" + this.port : void 0].join("");
+    };
+
+    URI.prototype.relative = function() {
+      var query;
+      query = this.queryString();
+      return [this.path, query ? "?" + query : void 0, this.hash ? "#" + this.hash : void 0].join("");
+    };
+
+    URI.prototype.directory = function() {
+      var splitPath;
+      splitPath = this.path.split('/');
+      if (splitPath.length > 1) {
+        return splitPath.slice(0, splitPath.length - 1).join('/') + "/";
+      } else {
+        return "";
+      }
+    };
+
+    URI.prototype.file = function() {
+      var splitPath;
+      splitPath = this.path.split("/");
+      return splitPath[splitPath.length - 1];
     };
 
     /*
@@ -8712,7 +8856,7 @@
 
 
     URI.queryFromParams = queryFromParams = function(value, prefix) {
-      var k, v, valueType;
+      var arrayResults, k, v, valueType;
       if (value == null) {
         return prefix;
       }
@@ -8723,13 +8867,17 @@
       switch (valueType) {
         case 'Array':
           return ((function() {
-            var _i, _len, _results;
-            _results = [];
-            for (_i = 0, _len = value.length; _i < _len; _i++) {
-              v = value[_i];
-              _results.push(queryFromParams(v, "" + prefix + "[]"));
+            var _i, _len;
+            arrayResults = [];
+            if (value.length === 0) {
+              arrayResults.push(queryFromParams(null, "" + prefix + "[]"));
+            } else {
+              for (_i = 0, _len = value.length; _i < _len; _i++) {
+                v = value[_i];
+                arrayResults.push(queryFromParams(v, "" + prefix + "[]"));
+              }
             }
-            return _results;
+            return arrayResults;
           })()).join("&");
         case 'Object':
           return ((function() {
@@ -8851,26 +8999,18 @@
       };
     });
 
-    Request.prototype.url = '';
-
-    Request.prototype.data = '';
-
     Request.prototype.method = 'GET';
 
     Request.prototype.hasFileUploads = function() {
       return dataHasFileUploads(this.data);
     };
 
-    Request.prototype.response = null;
-
-    Request.prototype.status = null;
-
-    Request.prototype.headers = {};
-
     Request.prototype.contentType = 'application/x-www-form-urlencoded';
 
+    Request.prototype.autosend = true;
+
     function Request(options) {
-      var handler, handlers, k;
+      var handler, handlers, k, _ref;
       handlers = {};
       for (k in options) {
         handler = options[k];
@@ -8885,23 +9025,21 @@
         handler = handlers[k];
         this.on(k, handler);
       }
+      if (((_ref = this.get('url')) != null ? _ref.length : void 0) > 0) {
+        if (this.autosend) {
+          this.send();
+        }
+      } else {
+        this.observe('url', function(url) {
+          if (url != null) {
+            return this.send();
+          }
+        });
+      }
     }
-
-    Request.observeAll('url', function(url) {
-      var _this = this;
-      return this._autosendTimeout = Batman.setImmediate(function() {
-        return _this.send();
-      });
-    });
 
     Request.prototype.send = function() {
       return Batman.developer.error("Please source a dependency file for a request implementation");
-    };
-
-    Request.prototype.cancel = function() {
-      if (this._autosendTimeout) {
-        return Batman.clearImmediate(this._autosendTimeout);
-      }
     };
 
     return Request;
@@ -9287,7 +9425,7 @@
     }
 
     RouteMapBuilder.prototype.resources = function() {
-      var action, actions, arg, args, as, callback, childBuilder, controller, included, k, options, path, resourceName, resourceNames, resourceRoot, route, routeOptions, v, _i, _j, _k, _len, _len1, _len2, _ref, _ref1;
+      var action, actions, arg, args, as, callback, childBuilder, controller, included, k, options, path, resourceName, resourceNames, resourceRoot, routeOptions, routeTemplate, v, _i, _j, _k, _len, _len1, _len2, _ref, _ref1;
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       resourceNames = (function() {
         var _i, _len, _results;
@@ -9348,16 +9486,16 @@
           if (!(included)) {
             continue;
           }
-          route = this.constructor.ROUTES[action];
-          as = route.name(resourceRoot);
-          path = route.path(resourceRoot);
+          routeTemplate = this.constructor.ROUTES[action];
+          as = routeTemplate.name(resourceRoot);
+          path = routeTemplate.path(resourceRoot);
           routeOptions = Batman.extend({
             controller: controller,
             action: action,
             path: path,
             as: as
           }, options);
-          childBuilder[route.cardinality](action, routeOptions);
+          childBuilder[routeTemplate.cardinality](action, routeOptions);
         }
       }
       return true;
@@ -9408,7 +9546,7 @@
     };
 
     RouteMapBuilder.prototype._addRoutesWithCardinality = function() {
-      var cardinality, name, names, options, resourceRoot, route, routeOptions, _i, _j, _len;
+      var cardinality, name, names, options, resourceRoot, routeOptions, routeTemplate, _i, _j, _len;
       cardinality = arguments[0], names = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), options = arguments[_i++];
       if (typeof options === 'string') {
         names.push(options);
@@ -9416,7 +9554,7 @@
       }
       options = Batman.extend({}, this.baseOptions, options);
       options[cardinality] = true;
-      route = this.constructor.ROUTES[cardinality];
+      routeTemplate = this.constructor.ROUTES[cardinality];
       resourceRoot = options.controller;
       for (_j = 0, _len = names.length; _j < _len; _j++) {
         name = names[_j];
@@ -9424,10 +9562,10 @@
           action: name
         }, options);
         if (routeOptions.path == null) {
-          routeOptions.path = route.path(resourceRoot, name);
+          routeOptions.path = routeTemplate.path(resourceRoot, name);
         }
         if (routeOptions.as == null) {
-          routeOptions.as = route.name(resourceRoot, name);
+          routeOptions.as = routeTemplate.name(resourceRoot, name);
         }
         this._addRoute(routeOptions);
       }
@@ -9450,10 +9588,8 @@
     };
 
     RouteMapBuilder.prototype._nameFromPath = function(path) {
-      var name, underscored;
-      underscored = path.replace(Batman.Route.regexps.namedOrSplat, '').replace(/\/+/g, '_').replace(/(^_)|(_$)/g, '');
-      name = Batman.helpers.camelize(underscored);
-      return name.charAt(0).toLowerCase() + name.slice(1);
+      path = path.replace(Batman.Route.regexps.namedOrSplat, '').replace(/\/+/g, '.').replace(/(^\.)|(\.$)/g, '');
+      return path;
     };
 
     RouteMapBuilder.prototype._nestingPath = function() {
@@ -9711,11 +9847,12 @@
 
     Association.prototype.defaultOptions = {
       saveInline: true,
-      autoload: true
+      autoload: true,
+      nestUrl: false
     };
 
     function Association(model, label, options) {
-      var defaultOptions, getAccessor, self, _base;
+      var defaultOptions, encoder, getAccessor, self;
       this.model = model;
       this.label = label;
       if (options == null) {
@@ -9726,7 +9863,11 @@
         name: Batman.helpers.camelize(Batman.helpers.singularize(this.label))
       };
       this.options = Batman.extend(defaultOptions, this.defaultOptions, options);
-      this.model.encode(label, this.encoder());
+      encoder = this.encoder();
+      if (!this.options.saveInline) {
+        encoder.encode = false;
+      }
+      this.model.encode(label, encoder);
       self = this;
       getAccessor = function() {
         return self.getAccessor.call(this, self, this.model, this.label);
@@ -9736,10 +9877,11 @@
         set: model.defaultAccessor.set,
         unset: model.defaultAccessor.unset
       });
-      if (this.url) {
-        (_base = this.model).url || (_base.url = function(recordOptions) {
-          return self.url(recordOptions);
-        });
+      if (this.options.nestUrl) {
+        if (!(this.model.urlNestsUnder != null)) {
+          developer.error("You must persist the the model " + this.model.constructor.name + " to use the url helpers on an association");
+        }
+        this.model.urlNestsUnder(Batman.helpers.underscore(this.getRelatedModel().get('resourceName')));
       }
     }
 
@@ -9884,7 +10026,7 @@
     }
 
     HasManyAssociation.prototype.apply = function(baseSaveError, base) {
-      var relations,
+      var relations, set,
         _this = this;
       if (!baseSaveError) {
         if (relations = this.getFromAttributes(base)) {
@@ -9892,7 +10034,10 @@
             return model.set(_this.foreignKey, base.get(_this.primaryKey));
           });
         }
-        return base.set(this.label, this.setForRecord(base));
+        base.set(this.label, set = this.setForRecord(base));
+        if (base.lifecycle.get('state') === 'creating') {
+          return set.markAsLoaded();
+        }
       }
     };
 
@@ -9902,10 +10047,6 @@
       return {
         encode: function(relationSet, _, __, record) {
           var jsonArray;
-          if (association._beingEncoded) {
-            return;
-          }
-          association._beingEncoded = true;
           if (!association.options.saveInline) {
             return;
           }
@@ -9914,11 +10055,12 @@
             relationSet.forEach(function(relation) {
               var relationJSON;
               relationJSON = relation.toJSON();
-              relationJSON[association.foreignKey] = record.get(association.primaryKey);
+              if (!association.inverse() || association.inverse().options.encodeForeignKey) {
+                relationJSON[association.foreignKey] = record.get(association.primaryKey);
+              }
               return jsonArray.push(relationJSON);
             });
           }
-          delete association._beingEncoded;
           return jsonArray;
         },
         decode: function(data, key, _, __, parentRecord) {
@@ -9934,7 +10076,7 @@
               record._withoutDirtyTracking(function() {
                 return this.fromJSON(jsonObject);
               });
-              existingRecord = relatedModel.get('loaded').indexedByUnique(association.foreignKey).get(record.get('id'));
+              existingRecord = relatedModel.get('loaded').indexedByUnique('id').get(record.get('id'));
               if (existingRecord != null) {
                 existingRecord._withoutDirtyTracking(function() {
                   return this.fromJSON(jsonObject);
@@ -9955,7 +10097,7 @@
                 record.set(association.options.inverseOf, parentRecord);
               }
             }
-            existingRelations.set('loaded', true);
+            existingRelations.markAsLoaded();
           } else {
             Batman.developer.error("Can't decode model " + association.options.name + " because it hasn't been loaded yet!");
           }
@@ -10173,7 +10315,8 @@
 
     BelongsToAssociation.prototype.defaultOptions = {
       saveInline: false,
-      autoload: true
+      autoload: true,
+      encodeForeignKey: true
     };
 
     function BelongsToAssociation(model, label, options) {
@@ -10188,19 +10331,10 @@
       BelongsToAssociation.__super__.constructor.apply(this, arguments);
       this.foreignKey = this.options.foreignKey || ("" + this.label + "_id");
       this.primaryKey = this.options.primaryKey || "id";
-      this.model.encode(this.foreignKey);
-    }
-
-    BelongsToAssociation.prototype.url = function(recordOptions) {
-      var ending, helper, id, inverse, root, _ref;
-      if (inverse = this.inverse()) {
-        root = Batman.helpers.pluralize(this.label);
-        id = (_ref = recordOptions.data) != null ? _ref[this.foreignKey] : void 0;
-        helper = inverse.isSingular ? "singularize" : "pluralize";
-        ending = Batman.helpers[helper](inverse.label);
-        return "/" + root + "/" + id + "/" + ending;
+      if (this.options.encodeForeignKey) {
+        this.model.encode(this.foreignKey);
       }
-    };
+    }
 
     BelongsToAssociation.prototype.encoder = function() {
       var association, encoder;
@@ -10264,10 +10398,16 @@
 
     PolymorphicBelongsToAssociation.prototype.proxyClass = Batman.PolymorphicBelongsToProxy;
 
+    PolymorphicBelongsToAssociation.prototype.defaultOptions = Batman.mixin({}, Batman.BelongsToAssociation.prototype.defaultOptions, {
+      encodeForeignTypeKey: true
+    });
+
     function PolymorphicBelongsToAssociation() {
       PolymorphicBelongsToAssociation.__super__.constructor.apply(this, arguments);
       this.foreignTypeKey = this.options.foreignTypeKey || ("" + this.label + "_type");
-      this.model.encode(this.foreignTypeKey);
+      if (this.options.encodeForeignTypeKey) {
+        this.model.encode(this.foreignTypeKey);
+      }
       this.typeIndicies = {};
     }
 
@@ -10420,10 +10560,7 @@
     };
 
     Validator.prototype.format = function(key, messageKey, interpolations) {
-      return Batman.t('errors.format', {
-        attribute: key,
-        message: Batman.t("errors.messages." + messageKey, interpolations)
-      });
+      return Batman.t("errors.messages." + messageKey, interpolations);
     };
 
     Validator.options = function() {
@@ -10471,10 +10608,46 @@
         too_long: "must be less than %{count} characters",
         wrong_length: "must be %{count} characters",
         blank: "can't be blank",
-        not_numeric: "must be a number"
+        not_numeric: "must be a number",
+        not_matching: "is not valid"
       }
     }
   });
+
+}).call(this);
+
+(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Batman.RegExpValidator = (function(_super) {
+
+    __extends(RegExpValidator, _super);
+
+    RegExpValidator.options('regexp', 'pattern');
+
+    function RegExpValidator(options) {
+      var _ref;
+      this.regexp = (_ref = options.regexp) != null ? _ref : options.pattern;
+      RegExpValidator.__super__.constructor.apply(this, arguments);
+    }
+
+    RegExpValidator.prototype.validateEach = function(errors, record, key, callback) {
+      var value;
+      value = record.get(key);
+      if ((value != null) && value !== '') {
+        if (!this.regexp.test(value)) {
+          errors.add(key, this.format(key, 'not_matching'));
+        }
+      }
+      return callback();
+    };
+
+    return RegExpValidator;
+
+  })(Batman.Validator);
+
+  Batman.Validators.push(Batman.RegExpValidator);
 
 }).call(this);
 
@@ -10588,6 +10761,124 @@
   })(Batman.Validator);
 
   Batman.Validators.push(Batman.LengthValidator);
+
+}).call(this);
+
+(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Batman.ControllerActionFrame = (function(_super) {
+
+    __extends(ControllerActionFrame, _super);
+
+    ControllerActionFrame.prototype.operationOccurred = false;
+
+    ControllerActionFrame.prototype.remainingOperations = 0;
+
+    ControllerActionFrame.prototype.event('complete').oneShot = true;
+
+    function ControllerActionFrame(options, onComplete) {
+      ControllerActionFrame.__super__.constructor.call(this, options);
+      this.on('complete', onComplete);
+    }
+
+    ControllerActionFrame.prototype.startOperation = function(options) {
+      if (options == null) {
+        options = {};
+      }
+      if (!options.internal) {
+        this.operationOccurred = true;
+      }
+      this._changeOperationsCounter(1);
+      return true;
+    };
+
+    ControllerActionFrame.prototype.finishOperation = function() {
+      this._changeOperationsCounter(-1);
+      return true;
+    };
+
+    ControllerActionFrame.prototype.startAndFinishOperation = function(options) {
+      this.startOperation(options);
+      this.finishOperation(options);
+      return true;
+    };
+
+    ControllerActionFrame.prototype._changeOperationsCounter = function(delta) {
+      var _ref;
+      this.remainingOperations += delta;
+      if (this.remainingOperations === 0) {
+        this.fire('complete');
+      }
+      if ((_ref = this.parentFrame) != null) {
+        _ref._changeOperationsCounter(delta);
+      }
+    };
+
+    return ControllerActionFrame;
+
+  })(Batman.Object);
+
+}).call(this);
+
+(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Batman.DOM.InsertionBinding = (function(_super) {
+
+    __extends(InsertionBinding, _super);
+
+    InsertionBinding.prototype.isTwoWay = false;
+
+    InsertionBinding.prototype.bindImmediately = false;
+
+    function InsertionBinding(node, className, key, context, parentRenderer, invert) {
+      var result,
+        _this = this;
+      this.invert = invert != null ? invert : false;
+      this.placeholderNode = document.createComment("detached node " + (this.get('_batmanID')));
+      result = InsertionBinding.__super__.constructor.apply(this, arguments);
+      Batman.DOM.onParseExit(this.node, function() {
+        _this.bind();
+        if (_this.placeholderNode != null) {
+          return Batman.DOM.trackBinding(_this, _this.placeholderNode);
+        }
+      });
+      result;
+
+    }
+
+    InsertionBinding.prototype.dataChange = function(value) {
+      var parentNode;
+      parentNode = this.placeholderNode.parentNode || this.node.parentNode;
+      if (!!value === !this.invert) {
+        if (!(this.node.parentNode != null)) {
+          Batman.DOM.insertBefore(parentNode, this.node, this.placeholderNode);
+          return parentNode.removeChild(this.placeholderNode);
+        }
+      } else {
+        parentNode.insertBefore(this.placeholderNode, this.node);
+        return Batman.DOM.removeNode(this.node);
+      }
+    };
+
+    InsertionBinding.prototype.die = function() {
+      if (this.dead) {
+        return;
+      }
+      InsertionBinding.__super__.die.apply(this, arguments);
+      if (!!this.get('filteredValue') === !this.invert) {
+        return Batman.DOM.destroyNode(this.placeholderNode);
+      } else {
+        return Batman.DOM.destroyNode(this.node);
+      }
+    };
+
+    return InsertionBinding;
+
+  })(Batman.DOM.AbstractBinding);
 
 }).call(this);
 
@@ -10767,7 +11058,9 @@
     and: function(lhs, rhs) {
       return lhs && rhs;
     },
-    or: defaultAndOr,
+    or: function(lhs, rhs, binding) {
+      return lhs || rhs;
+    },
     not: function(value, binding) {
       return !!!value;
     },
@@ -10787,7 +11080,13 @@
       }
       return value;
     }),
-    "default": defaultAndOr,
+    "default": function(value, defaultValue, binding) {
+      if ((value != null) && value !== '') {
+        return value;
+      } else {
+        return defaultValue;
+      }
+    },
     prepend: function(value, string, binding) {
       return string + value;
     },
@@ -10825,6 +11124,9 @@
       } else {
         return Batman.helpers.pluralize(string);
       }
+    }),
+    humanize: buntUndefined(function(string, binding) {
+      return Batman.helpers.humanize(string);
     }),
     join: buntUndefined(function(value, withWhat, binding) {
       if (withWhat == null) {
@@ -10929,16 +11231,16 @@
     };
 
     RenderContext.root = function() {
+      var root;
       if (Batman.currentApp != null) {
-        return Batman.currentApp.get('_renderContext');
-      } else {
-        return this.base;
+        root = Batman.currentApp.get('_renderContext');
       }
+      return root != null ? root : root = this.base;
     };
 
-    RenderContext.prototype.windowWrapper = typeof window !== "undefined" && window !== null ? {
-      window: window
-    } : {};
+    RenderContext.prototype.windowWrapper = {
+      window: Batman.container
+    };
 
     function RenderContext(object, parent) {
       this.object = object;
@@ -11032,9 +11334,7 @@
 
   }).call(this);
 
-  Batman.RenderContext.base = new Batman.RenderContext({
-    window: Batman.container
-  });
+  Batman.RenderContext.base = new Batman.RenderContext(Batman.RenderContext.prototype.windowWrapper);
 
 }).call(this);
 
@@ -11048,6 +11348,8 @@
 
     ViewStore.prefix = 'views';
 
+    ViewStore.fetchFromRemote = true;
+
     function ViewStore() {
       ViewStore.__super__.constructor.apply(this, arguments);
       this._viewContents = {};
@@ -11058,11 +11360,6 @@
 
     ViewStore.prototype.fetchView = function(path) {
       var _this = this;
-      Batman.developer["do"](function() {
-        if (typeof Batman.View.prototype.prefix !== 'undefined') {
-          return Batman.developer.warn("Batman.View.prototype.prefix has been removed, please use Batman.ViewStore.prefix instead.");
-        }
-      });
       return new Batman.Request({
         url: Batman.Navigator.normalizePath(this.constructor.prefix, "" + path + ".html"),
         type: 'html',
@@ -11078,6 +11375,7 @@
     ViewStore.accessor({
       'final': true,
       get: function(path) {
+        var contents;
         if (path[0] !== '/') {
           return this.get("/" + path);
         }
@@ -11087,7 +11385,14 @@
         if (this._requestedPaths.has(path)) {
           return;
         }
-        this.fetchView(path);
+        if (contents = this._sourceFromDOM(path)) {
+          return contents;
+        }
+        if (this.constructor.fetchFromRemote) {
+          this.fetchView(path);
+        } else {
+          throw new Error("Couldn't find view source for \'" + path + "\'!");
+        }
       },
       set: function(path, content) {
         if (path[0] !== '/') {
@@ -11101,6 +11406,18 @@
     ViewStore.prototype.prefetch = function(path) {
       this.get(path);
       return true;
+    };
+
+    ViewStore.prototype._sourceFromDOM = function(path) {
+      var node, relativePath;
+      relativePath = path.slice(1);
+      if (node = Batman.DOM.querySelector(document, "[data-defineview*='" + relativePath + "']")) {
+        Batman.setImmediate(function() {
+          var _ref;
+          return (_ref = node.parentNode) != null ? _ref.removeChild(node) : void 0;
+        });
+        return Batman.DOM.defineView(path, node);
+      }
     };
 
     return ViewStore;
@@ -11147,6 +11464,8 @@
     };
 
     View.prototype.isView = true;
+
+    View.prototype.cache = true;
 
     View.prototype._rendered = false;
 
@@ -11270,7 +11589,7 @@
       this._rendered = true;
       this.event('ready').resetOneShot();
       if (node) {
-        this._renderer = new Batman.Renderer(node, null, this.context, this);
+        this._renderer = new Batman.Renderer(node, this.context, this);
         return this._renderer.on('rendered', function() {
           return _this.fire('ready', node);
         });
